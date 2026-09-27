@@ -22,5 +22,10 @@ npm run typecheck
 npm run build
 ```
 
-Hiện tại chỉ có root layout và trang chủ tối thiểu. Chưa có route, component,
-type, API client hay nghiệp vụ JobBoard mẫu.
+## Phạm vi hiện tại
+
+- Trang chủ responsive với tìm kiếm nhanh, lĩnh vực nổi bật và danh sách việc
+  làm tuyển chọn.
+- Component dùng chung cho header, footer, thẻ việc làm và icon.
+- Kiểu dữ liệu Job/JobApplication cùng dữ liệu demo tách khỏi component. Dữ liệu
+  demo sẽ được thay bởi API client khi backend mở các HTTP endpoint tương ứng.

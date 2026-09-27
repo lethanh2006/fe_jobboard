@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "JobBoard",
-  description: "JobBoard frontend base",
+  title: {
+    default: "JobBoard — Công việc tốt, sự nghiệp đúng hướng",
+    template: "%s | JobBoard",
+  },
+  description:
+    "Khám phá việc làm phù hợp và kết nối với những đội ngũ tử tế trên JobBoard.",
 };
 
 export default function RootLayout({
