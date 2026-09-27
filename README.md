@@ -26,6 +26,10 @@ npm run build
 
 - Trang chủ responsive với tìm kiếm nhanh, lĩnh vực nổi bật và danh sách việc
   làm tuyển chọn.
+- Trang `/viec-lam` hỗ trợ tìm theo từ khóa/địa điểm, lọc lĩnh vực, cấp bậc,
+  mức lương, sắp xếp và phân trang trên client.
+- Trang `/viec-lam/[id]` hiển thị mô tả, yêu cầu, quyền lợi, tổng quan và các
+  công việc liên quan; các route chi tiết được prerender bằng static params.
 - Component dùng chung cho header, footer, thẻ việc làm và icon.
 - Kiểu dữ liệu Job/JobApplication cùng dữ liệu demo tách khỏi component. Dữ liệu
   demo sẽ được thay bởi API client khi backend mở các HTTP endpoint tương ứng.
