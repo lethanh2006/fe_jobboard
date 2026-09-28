@@ -1,44 +1,84 @@
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import {
+  accessTokenCookieName,
+  clearAuthCookies,
+  rememberSessionCookieName,
+  setAuthCookies,
+} from "@/lib/auth-cookies";
 import { backendApiUrl } from "@/lib/api-config";
-import { authCookieName } from "@/lib/server-auth";
+import { refreshSession } from "@/lib/refresh-session";
+import { isTrustedMutation } from "@/lib/request-security";
+import type { LoginResponse } from "@/types/auth";
 
 type RouteContext = {
   params: Promise<{ path: string[] }>;
 };
 
 async function proxy(request: Request, context: RouteContext) {
+  if (!["GET", "HEAD"].includes(request.method) && !isTrustedMutation(request)) {
+    return NextResponse.json(
+      { title: "Yêu cầu bị từ chối", detail: "Origin gửi yêu cầu không hợp lệ." },
+      { status: 403 },
+    );
+  }
+
   const { path } = await context.params;
   const incomingUrl = new URL(request.url);
   const targetPath = path.map(encodeURIComponent).join("/");
   const targetUrl = `${backendApiUrl}/${targetPath}${incomingUrl.search}`;
-  const accessToken = (await cookies()).get(authCookieName)?.value;
-  const headers = new Headers({ Accept: "application/json" });
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(accessTokenCookieName)?.value;
   const contentType = request.headers.get("content-type");
+  const requestBody = request.method === "GET" || request.method === "HEAD"
+    ? undefined
+    : await request.arrayBuffer();
 
-  if (contentType) {
-    headers.set("Content-Type", contentType);
-  }
+  function forward(token?: string) {
+    const headers = new Headers({ Accept: "application/json" });
+    if (contentType) {
+      headers.set("Content-Type", contentType);
+    }
 
-  if (accessToken) {
-    headers.set("Authorization", `Bearer ${accessToken}`);
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+
+    return fetch(targetUrl, {
+      method: request.method,
+      headers,
+      body: requestBody,
+      cache: "no-store",
+    });
   }
 
   try {
-    const response = await fetch(targetUrl, {
-      method: request.method,
-      headers,
-      body: request.method === "GET" || request.method === "HEAD"
-        ? undefined
-        : await request.arrayBuffer(),
-      cache: "no-store",
-    });
+    let backendResponse = await forward(accessToken);
+    let refreshedLogin: LoginResponse | null = null;
 
-    return new Response(response.body, {
-      status: response.status,
+    if (backendResponse.status === 401) {
+      refreshedLogin = await refreshSession();
+      if (refreshedLogin) {
+        await backendResponse.body?.cancel();
+        backendResponse = await forward(refreshedLogin.accessToken);
+      }
+    }
+
+    const response = new NextResponse(backendResponse.body, {
+      status: backendResponse.status,
       headers: {
-        "Content-Type": response.headers.get("content-type") ?? "application/json",
+        "Content-Type": backendResponse.headers.get("content-type") ?? "application/json",
       },
     });
+
+    if (refreshedLogin) {
+      const remember = cookieStore.get(rememberSessionCookieName)?.value === "1";
+      setAuthCookies(response, refreshedLogin, remember);
+    } else if (backendResponse.status === 401) {
+      clearAuthCookies(response);
+    }
+
+    return response;
   } catch {
     return Response.json(
       {

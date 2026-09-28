@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { setAuthCookies } from "@/lib/auth-cookies";
 import { backendApiUrl } from "@/lib/api-config";
-import { authCookieName } from "@/lib/server-auth";
+import { isTrustedMutation } from "@/lib/request-security";
 import type { LoginResponse } from "@/types/auth";
 
 type LoginPayload = {
@@ -10,6 +11,13 @@ type LoginPayload = {
 };
 
 export async function POST(request: Request) {
+  if (!isTrustedMutation(request)) {
+    return NextResponse.json(
+      { title: "Yêu cầu bị từ chối", detail: "Origin gửi yêu cầu không hợp lệ." },
+      { status: 403 },
+    );
+  }
+
   let payload: LoginPayload;
 
   try {
@@ -46,13 +54,7 @@ export async function POST(request: Request) {
 
     const login = (await backendResponse.json()) as LoginResponse;
     const response = NextResponse.json({ user: login.user });
-    response.cookies.set(authCookieName, login.accessToken, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      ...(payload.remember ? { expires: new Date(login.expiresAt) } : {}),
-    });
+    setAuthCookies(response, login, payload.remember === true);
 
     return response;
   } catch {

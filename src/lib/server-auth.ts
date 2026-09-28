@@ -2,10 +2,9 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { accessTokenCookieName, refreshTokenCookieName } from "@/lib/auth-cookies";
 import { backendApiUrl } from "@/lib/api-config";
 import type { AuthUser, UserRole } from "@/types/auth";
-
-export const authCookieName = "jobboard_access_token";
 
 export type AuthSession = {
   accessToken: string;
@@ -13,7 +12,7 @@ export type AuthSession = {
 };
 
 export async function getSession(): Promise<AuthSession | null> {
-  const accessToken = (await cookies()).get(authCookieName)?.value;
+  const accessToken = (await cookies()).get(accessTokenCookieName)?.value;
   if (!accessToken) {
     return null;
   }
@@ -47,6 +46,10 @@ export async function requireRole(
   const session = await getSession();
 
   if (!session) {
+    if ((await cookies()).has(refreshTokenCookieName)) {
+      redirect(`/api/auth/refresh?redirect=${encodeURIComponent(returnPath)}`);
+    }
+
     redirect(`/dang-nhap?redirect=${encodeURIComponent(returnPath)}`);
   }
 

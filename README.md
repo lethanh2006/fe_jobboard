@@ -25,8 +25,10 @@ Tài khoản demo:
 | Ứng viên | `candidate@jobboard.vn` | `JobBoard@123` |
 | Nhà tuyển dụng | `employer@jobboard.vn` | `JobBoard@123` |
 
-JWT chỉ được giữ trong cookie `HttpOnly`, không đưa vào `localStorage`. Các thao
-tác client đi qua `/api/backend/*`; route proxy mới gắn bearer token khi gọi BE.
+Access token và refresh token chỉ được giữ trong cookie `HttpOnly`, không đưa
+vào `localStorage`. Các thao tác client đi qua `/api/backend/*`; route proxy mới
+gắn bearer token khi gọi BE, tự xoay phiên khi access token hết hạn và thử lại
+request đúng một lần. Những request ghi từ origin khác bị từ chối.
 
 ## Kiểm tra
 
@@ -48,8 +50,8 @@ npm run build
   cập nhật hồ sơ, kỹ năng, khoảng lương mong muốn qua API.
 - Dashboard nhà tuyển dụng gọi API để tạo/đăng/đóng tin và cập nhật trạng thái
   ứng viên; thay đổi được giữ trong phiên chạy backend.
-- Trang đăng nhập gọi API JWT thật, hỗ trợ redirect an toàn, duy trì phiên bằng
-  cookie `HttpOnly` và đăng xuất.
+- Trang đăng nhập gọi API JWT thật, hỗ trợ redirect an toàn, refresh token xoay
+  vòng, cookie `HttpOnly` và đăng xuất có thu hồi phiên phía server.
 - Component dùng chung cho header, footer, thẻ việc làm và icon.
 - API client tập trung tại `src/lib/api.ts`, chịu trách nhiệm mapping enum và
   contract C# sang model hiển thị TypeScript. `src/lib/server-auth.ts` bảo vệ
