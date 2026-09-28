@@ -97,7 +97,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
       </div>
 
       <p className="signup-note">
-        Chưa có tài khoản? <Link href="/dang-nhap">Tạo tài khoản miễn phí</Link>
+        Chưa có tài khoản? <Link href="/dang-ky">Tạo tài khoản miễn phí</Link>
       </p>
     </form>
   );

@@ -2467,6 +2467,28 @@ a {
   color: #7c8885;
 }
 
+.form-field small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.terms-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 17px 0 20px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.terms-field input {
+  margin-top: 2px;
+}
+
 .form-options {
   display: flex;
   align-items: center;
