@@ -22,20 +22,6 @@ type CandidateRow = {
   status: JobApplication["status"];
 };
 
-const fallbackJobs: DashboardJob[] = [
-  { id: 1, title: "Backend Developer (.NET)", status: "Published", applications: 14, views: 286, deadline: "31/10/2026", postedAt: "25/09/2026" },
-  { id: 2, title: "Senior Product Manager", status: "Published", applications: 8, views: 174, deadline: "05/11/2026", postedAt: "24/09/2026" },
-  { id: 3, title: "QA Automation Engineer", status: "Draft", applications: 0, views: 0, deadline: "Chưa đặt", postedAt: "Hôm nay" },
-  { id: 4, title: "UI Designer", status: "Closed", applications: 21, views: 412, deadline: "Đã đóng", postedAt: "12/09/2026" },
-];
-
-const initialCandidates: CandidateRow[] = [
-  { id: 1, name: "Nguyễn Minh An", role: "Backend Developer", job: "Backend Developer (.NET)", match: 94, status: "Reviewing" },
-  { id: 2, name: "Trần Hoàng Linh", role: "Software Engineer", job: "Backend Developer (.NET)", match: 89, status: "Submitted" },
-  { id: 3, name: "Lê Thu Trang", role: "Product Owner", job: "Senior Product Manager", match: 86, status: "Reviewing" },
-  { id: 4, name: "Phạm Quốc Huy", role: "Backend Engineer", job: "Backend Developer (.NET)", match: 82, status: "Submitted" },
-];
-
 const jobStatusLabels: Record<EmployerJob["status"], string> = {
   Draft: "Bản nháp",
   Published: "Đang tuyển",
@@ -50,29 +36,31 @@ const candidateStatusLabels: Record<CandidateRow["status"], string> = {
 };
 
 export function EmployerDashboard({
+  companyId,
+  companyName,
+  employerName,
   initialEmployerJobs,
   initialApplications,
 }: {
+  companyId: number;
+  companyName: string;
+  employerName: string;
   initialEmployerJobs: EmployerJob[];
   initialApplications: ApplicationView[];
 }) {
   const [activeView, setActiveView] = useState<"jobs" | "candidates">("jobs");
   const [employerJobs, setEmployerJobs] = useState<DashboardJob[]>(
-    initialEmployerJobs.length > 0
-      ? initialEmployerJobs.map((job) => ({ ...job, views: 0 }))
-      : fallbackJobs,
+    initialEmployerJobs.map((job) => ({ ...job, views: 0 })),
   );
   const [candidates, setCandidates] = useState<CandidateRow[]>(
-    initialApplications.length > 0
-      ? initialApplications.map((application, index) => ({
-          id: application.id,
-          name: application.candidateName,
-          role: "Ứng viên JobBoard",
-          job: application.jobTitle,
-          match: Math.max(74, 94 - index * 5),
-          status: application.status,
-        }))
-      : initialCandidates,
+    initialApplications.map((application, index) => ({
+      id: application.id,
+      name: application.candidateName,
+      role: "Ứng viên JobBoard",
+      job: application.jobTitle,
+      match: Math.max(74, 94 - index * 5),
+      status: application.status,
+    })),
   );
   const [showComposer, setShowComposer] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
@@ -89,7 +77,7 @@ export function EmployerDashboard({
 
   async function changeJobState(id: number, action: "publish" | "close") {
     try {
-      const updated = await changeEmployerJobState(1, id, action);
+      const updated = await changeEmployerJobState(companyId, id, action);
       setEmployerJobs((currentJobs) =>
         currentJobs.map((job) =>
           job.id === id ? { ...job, status: updated.status } : job,
@@ -103,7 +91,7 @@ export function EmployerDashboard({
 
   async function updateCandidateStatus(id: number, status: CandidateRow["status"]) {
     try {
-      await changeApplicationStatus(1, id, status);
+      await changeApplicationStatus(id, status);
       setCandidates((currentCandidates) =>
         currentCandidates.map((candidate) =>
           candidate.id === id ? { ...candidate, status } : candidate,
@@ -126,7 +114,7 @@ export function EmployerDashboard({
     }
 
     try {
-      const job = await createEmployerJob(1, {
+      const job = await createEmployerJob(companyId, {
         title,
         deadline,
         location: "TP. Hồ Chí Minh",
@@ -146,8 +134,8 @@ export function EmployerDashboard({
     <>
       <section className="employer-welcome">
         <div>
-          <span className="section-kicker">Nova Technology</span>
-          <h1>Chào buổi sáng, Trần Bình</h1>
+          <span className="section-kicker">{companyName}</span>
+          <h1>Chào buổi sáng, {employerName}</h1>
           <p>Đây là tình hình tuyển dụng của đội ngũ trong tuần này.</p>
         </div>
         <button className="button" type="button" onClick={() => setShowComposer((visible) => !visible)}>

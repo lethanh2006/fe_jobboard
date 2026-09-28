@@ -3,17 +3,19 @@ import { CandidateProfileForm } from "@/components/candidate-profile-form";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getCandidateProfile } from "@/lib/api";
+import { requireRole } from "@/lib/server-auth";
 
 export const metadata: Metadata = {
   title: "Hồ sơ ứng viên",
 };
 
 export default async function CandidateProfilePage() {
-  const profile = await getCandidateProfile(20);
+  const session = await requireRole("Candidate", "/ung-vien/ho-so");
+  const profile = await getCandidateProfile(session.user.id, session.accessToken);
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader user={session.user} />
       <main className="profile-page">
         <section className="account-heading">
           <div className="shell">

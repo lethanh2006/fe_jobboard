@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getCandidateApplications, getJobs } from "@/lib/api";
 import { formatDate } from "@/lib/format";
+import { requireRole } from "@/lib/server-auth";
 import type { JobApplication } from "@/types/job";
 
 export const metadata: Metadata = {
@@ -15,8 +16,9 @@ export const metadata: Metadata = {
 };
 
 export default async function CandidateApplicationsPage() {
+  const session = await requireRole("Candidate", "/ung-vien/don-ung-tuyen");
   const [applicationHistory, jobs] = await Promise.all([
-    getCandidateApplications(20),
+    getCandidateApplications(session.user.id, session.accessToken),
     getJobs(),
   ]);
   const applications = applicationHistory.flatMap((application) => {
@@ -29,13 +31,13 @@ export default async function CandidateApplicationsPage() {
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader user={session.user} />
       <main className="candidate-page">
         <section className="account-heading">
           <div className="shell account-heading-inner">
             <div>
               <span className="section-kicker">Không gian ứng viên</span>
-              <h1>Chào Nguyễn An,</h1>
+              <h1>Chào {session.user.name},</h1>
               <p>Theo dõi hành trình ứng tuyển và đừng bỏ lỡ cập nhật mới.</p>
             </div>
             <div className="profile-progress">

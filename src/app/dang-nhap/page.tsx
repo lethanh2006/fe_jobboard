@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { LoginForm } from "@/components/login-form";
+import { getSession } from "@/lib/server-auth";
+import { redirect as navigate } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Đăng nhập",
@@ -12,6 +14,11 @@ type LoginPageProps = {
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const session = await getSession();
+  if (session) {
+    navigate(session.user.role === "Employer" ? "/nha-tuyen-dung" : "/viec-lam");
+  }
+
   const { redirect } = await searchParams;
 
   return (

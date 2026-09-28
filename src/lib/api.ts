@@ -1,8 +1,8 @@
 import {
-  demoApplications,
   getJobById as getFallbackJobById,
   jobs as fallbackJobs,
 } from "@/data/jobs";
+import { backendApiUrl } from "@/lib/api-config";
 import type {
   ApplicationView,
   CandidateProfile,
@@ -13,7 +13,7 @@ import type {
   WorkMode,
 } from "@/types/job";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+const browserApiUrl = "/api/backend";
 
 type ApiJob = {
   id: number;
@@ -60,6 +60,16 @@ type ApiProblem = {
   title?: string;
   detail?: string;
 };
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
 
 const levelLabels: Record<ApiJob["level"], JobLevel> = {
   Internship: "Thực tập",
@@ -135,20 +145,29 @@ function toDateOnly(value: string) {
   return value.slice(0, 10);
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiUrl}${path}`, {
+async function request<T>(
+  path: string,
+  init?: RequestInit,
+  accessToken?: string,
+): Promise<T> {
+  const baseUrl = typeof window === "undefined" ? backendApiUrl : browserApiUrl;
+  const response = await fetch(`${baseUrl}${path}`, {
     cache: "no-store",
     ...init,
     headers: {
       Accept: "application/json",
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...init?.headers,
     },
   });
 
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as ApiProblem;
-    throw new Error(problem.detail ?? problem.title ?? "Không thể kết nối với JobBoard API.");
+    throw new ApiError(
+      problem.detail ?? problem.title ?? "Không thể kết nối với JobBoard API.",
+      response.status,
+    );
   }
 
   return (await response.json()) as T;
@@ -171,46 +190,53 @@ export async function getJobById(id: number): Promise<Job | undefined> {
   }
 }
 
-export async function applyToJob(candidateId: number, jobId: number) {
+export async function applyToJob(jobId: number) {
   const result = await request<ApiApplication>("/applications", {
     method: "POST",
-    body: JSON.stringify({ candidateId, jobId }),
+    body: JSON.stringify({ jobId }),
   });
 
   return mapApplication(result);
 }
 
-export async function getCandidateApplications(candidateId: number): Promise<ApplicationView[]> {
-  try {
-    const result = await request<ApiApplication[]>(`/candidates/${candidateId}/applications`);
-    return result.map(mapApplication);
-  } catch {
-    return demoApplications.map((application) =>
-      mapApplication({ ...application, candidateId }),
-    );
-  }
+export async function getCandidateApplications(
+  candidateId: number,
+  accessToken: string,
+): Promise<ApplicationView[]> {
+  const result = await request<ApiApplication[]>(
+    `/candidates/${candidateId}/applications`,
+    undefined,
+    accessToken,
+  );
+  return result.map(mapApplication);
 }
 
-export async function getEmployerJobs(companyId: number): Promise<EmployerJob[]> {
-  try {
-    const result = await request<EmployerJob[]>(`/employers/${companyId}/jobs`);
-    return result.map((job) => ({
-      ...job,
-      deadline: toDateOnly(job.deadline),
-      postedAt: toDateOnly(job.postedAt),
-    }));
-  } catch {
-    return [];
-  }
+export async function getEmployerJobs(
+  companyId: number,
+  accessToken: string,
+): Promise<EmployerJob[]> {
+  const result = await request<EmployerJob[]>(
+    `/employers/${companyId}/jobs`,
+    undefined,
+    accessToken,
+  );
+  return result.map((job) => ({
+    ...job,
+    deadline: toDateOnly(job.deadline),
+    postedAt: toDateOnly(job.postedAt),
+  }));
 }
 
-export async function getEmployerApplications(companyId: number): Promise<ApplicationView[]> {
-  try {
-    const result = await request<ApiApplication[]>(`/employers/${companyId}/applications`);
-    return result.map(mapApplication);
-  } catch {
-    return [];
-  }
+export async function getEmployerApplications(
+  companyId: number,
+  accessToken: string,
+): Promise<ApplicationView[]> {
+  const result = await request<ApiApplication[]>(
+    `/employers/${companyId}/applications`,
+    undefined,
+    accessToken,
+  );
+  return result.map(mapApplication);
 }
 
 export async function createEmployerJob(
@@ -226,7 +252,6 @@ export async function createEmployerJob(
   const job = await request<EmployerJob>(`/employers/${companyId}/jobs`, {
     method: "POST",
     body: JSON.stringify({
-      companyName: "Nova Technology",
       title: input.title,
       location: input.location,
       salaryMin: input.salaryMin,
@@ -258,30 +283,24 @@ export async function changeEmployerJobState(
 }
 
 export async function changeApplicationStatus(
-  companyId: number,
   applicationId: number,
   status: JobApplication["status"],
 ) {
   return request<ApiApplication>(`/applications/${applicationId}/status`, {
     method: "PATCH",
-    body: JSON.stringify({ companyId, status }),
+    body: JSON.stringify({ status }),
   });
 }
 
-export async function getCandidateProfile(candidateId: number): Promise<CandidateProfile> {
-  try {
-    return await request<CandidateProfile>(`/candidates/${candidateId}/profile`);
-  } catch {
-    return {
-      id: candidateId,
-      name: "Nguyễn Minh An",
-      email: "an@example.com",
-      bio: "Backend Developer yêu thích sản phẩm có tác động thực tế và những hệ thống được thiết kế chỉn chu.",
-      desiredSalaryMin: 1800,
-      desiredSalaryMax: 2800,
-      skills: ["C#", "ASP.NET Core", "PostgreSQL", "Docker"],
-    };
-  }
+export async function getCandidateProfile(
+  candidateId: number,
+  accessToken: string,
+): Promise<CandidateProfile> {
+  return request<CandidateProfile>(
+    `/candidates/${candidateId}/profile`,
+    undefined,
+    accessToken,
+  );
 }
 
 export async function updateCandidateProfile(

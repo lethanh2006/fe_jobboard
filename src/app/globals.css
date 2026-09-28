@@ -134,8 +134,25 @@ a {
   gap: 20px;
 }
 
+.header-actions form {
+  margin: 0;
+}
+
+.signed-in-user {
+  max-width: 150px;
+  overflow: hidden;
+  color: #52645f;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .text-button {
+  border: 0;
+  background: transparent;
   color: #334743;
+  cursor: pointer;
   font-size: 14px;
   font-weight: 700;
 }
@@ -210,15 +227,22 @@ a {
   box-shadow: var(--shadow);
 }
 
-.mobile-menu nav a {
+.mobile-menu nav a,
+.mobile-menu nav button {
+  width: 100%;
+  border: 0;
   border-radius: 8px;
+  background: transparent;
   padding: 12px;
   color: #41514d;
+  cursor: pointer;
   font-size: 13px;
   font-weight: 700;
+  text-align: left;
 }
 
-.mobile-menu nav a:hover {
+.mobile-menu nav a:hover,
+.mobile-menu nav button:hover {
   background: var(--mint);
   color: var(--green);
 }
@@ -2472,6 +2496,23 @@ a {
   padding: 11px;
   font-size: 9px;
   line-height: 1.5;
+}
+
+.demo-login-hint {
+  display: grid;
+  gap: 5px;
+  margin-top: 18px;
+  border: 1px solid #d9e9e3;
+  border-radius: 10px;
+  background: #f2faf7;
+  color: #536b64;
+  padding: 12px;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.demo-login-hint strong {
+  color: var(--green-dark);
 }
 
 .signup-note {
