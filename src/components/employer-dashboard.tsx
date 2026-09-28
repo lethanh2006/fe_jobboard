@@ -2,14 +2,15 @@
 
 import { type FormEvent, useMemo, useState } from "react";
 import { Icon } from "@/components/icon";
+import {
+  changeApplicationStatus,
+  changeEmployerJobState,
+  createEmployerJob,
+} from "@/lib/api";
+import type { ApplicationView, EmployerJob, JobApplication } from "@/types/job";
 
-type EmployerJob = {
-  id: number;
-  title: string;
-  status: "Draft" | "Published" | "Closed";
-  applications: number;
+type DashboardJob = EmployerJob & {
   views: number;
-  deadline: string;
 };
 
 type CandidateRow = {
@@ -18,14 +19,14 @@ type CandidateRow = {
   role: string;
   job: string;
   match: number;
-  status: "Submitted" | "Reviewing" | "Accepted" | "Rejected";
+  status: JobApplication["status"];
 };
 
-const initialJobs: EmployerJob[] = [
-  { id: 1, title: "Backend Developer (.NET)", status: "Published", applications: 14, views: 286, deadline: "31/10/2026" },
-  { id: 2, title: "Senior Product Manager", status: "Published", applications: 8, views: 174, deadline: "05/11/2026" },
-  { id: 3, title: "QA Automation Engineer", status: "Draft", applications: 0, views: 0, deadline: "Chưa đặt" },
-  { id: 4, title: "UI Designer", status: "Closed", applications: 21, views: 412, deadline: "Đã đóng" },
+const fallbackJobs: DashboardJob[] = [
+  { id: 1, title: "Backend Developer (.NET)", status: "Published", applications: 14, views: 286, deadline: "31/10/2026", postedAt: "25/09/2026" },
+  { id: 2, title: "Senior Product Manager", status: "Published", applications: 8, views: 174, deadline: "05/11/2026", postedAt: "24/09/2026" },
+  { id: 3, title: "QA Automation Engineer", status: "Draft", applications: 0, views: 0, deadline: "Chưa đặt", postedAt: "Hôm nay" },
+  { id: 4, title: "UI Designer", status: "Closed", applications: 21, views: 412, deadline: "Đã đóng", postedAt: "12/09/2026" },
 ];
 
 const initialCandidates: CandidateRow[] = [
@@ -48,11 +49,33 @@ const candidateStatusLabels: Record<CandidateRow["status"], string> = {
   Rejected: "Từ chối",
 };
 
-export function EmployerDashboard() {
+export function EmployerDashboard({
+  initialEmployerJobs,
+  initialApplications,
+}: {
+  initialEmployerJobs: EmployerJob[];
+  initialApplications: ApplicationView[];
+}) {
   const [activeView, setActiveView] = useState<"jobs" | "candidates">("jobs");
-  const [employerJobs, setEmployerJobs] = useState(initialJobs);
-  const [candidates, setCandidates] = useState(initialCandidates);
+  const [employerJobs, setEmployerJobs] = useState<DashboardJob[]>(
+    initialEmployerJobs.length > 0
+      ? initialEmployerJobs.map((job) => ({ ...job, views: 0 }))
+      : fallbackJobs,
+  );
+  const [candidates, setCandidates] = useState<CandidateRow[]>(
+    initialApplications.length > 0
+      ? initialApplications.map((application, index) => ({
+          id: application.id,
+          name: application.candidateName,
+          role: "Ứng viên JobBoard",
+          job: application.jobTitle,
+          match: Math.max(74, 94 - index * 5),
+          status: application.status,
+        }))
+      : initialCandidates,
+  );
   const [showComposer, setShowComposer] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
 
   const stats = useMemo(
     () => ({
@@ -64,19 +87,35 @@ export function EmployerDashboard() {
     [candidates, employerJobs],
   );
 
-  function closeJob(id: number) {
-    setEmployerJobs((currentJobs) =>
-      currentJobs.map((job) => (job.id === id ? { ...job, status: "Closed" } : job)),
-    );
+  async function changeJobState(id: number, action: "publish" | "close") {
+    try {
+      const updated = await changeEmployerJobState(1, id, action);
+      setEmployerJobs((currentJobs) =>
+        currentJobs.map((job) =>
+          job.id === id ? { ...job, status: updated.status } : job,
+        ),
+      );
+      setActionMessage(action === "close" ? "Đã đóng tin tuyển dụng." : "Đã đăng tin tuyển dụng.");
+    } catch (error) {
+      setActionMessage(error instanceof Error ? error.message : "Không thể cập nhật tin.");
+    }
   }
 
-  function updateCandidateStatus(id: number, status: CandidateRow["status"]) {
-    setCandidates((currentCandidates) =>
-      currentCandidates.map((candidate) => (candidate.id === id ? { ...candidate, status } : candidate)),
-    );
+  async function updateCandidateStatus(id: number, status: CandidateRow["status"]) {
+    try {
+      await changeApplicationStatus(1, id, status);
+      setCandidates((currentCandidates) =>
+        currentCandidates.map((candidate) =>
+          candidate.id === id ? { ...candidate, status } : candidate,
+        ),
+      );
+      setActionMessage("Đã cập nhật trạng thái ứng viên.");
+    } catch (error) {
+      setActionMessage(error instanceof Error ? error.message : "Không thể cập nhật ứng viên.");
+    }
   }
 
-  function addDraft(event: FormEvent<HTMLFormElement>) {
+  async function addDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const title = String(form.get("title") ?? "").trim();
@@ -86,19 +125,21 @@ export function EmployerDashboard() {
       return;
     }
 
-    setEmployerJobs((currentJobs) => [
-      {
-        id: Math.max(...currentJobs.map((job) => job.id)) + 1,
+    try {
+      const job = await createEmployerJob(1, {
         title,
-        status: "Draft",
-        applications: 0,
-        views: 0,
-        deadline: deadline || "Chưa đặt",
-      },
-      ...currentJobs,
-    ]);
-    event.currentTarget.reset();
-    setShowComposer(false);
+        deadline,
+        location: "TP. Hồ Chí Minh",
+        salaryMin: 1500,
+        salaryMax: 2500,
+      });
+      setEmployerJobs((currentJobs) => [{ ...job, views: 0 }, ...currentJobs]);
+      event.currentTarget.reset();
+      setShowComposer(false);
+      setActionMessage("Đã lưu bản nháp trên backend.");
+    } catch (error) {
+      setActionMessage(error instanceof Error ? error.message : "Không thể tạo bản nháp.");
+    }
   }
 
   return (
@@ -126,7 +167,7 @@ export function EmployerDashboard() {
           </label>
           <label>
             <span>Hạn ứng tuyển</span>
-            <input name="deadline" type="date" />
+            <input name="deadline" type="date" required />
           </label>
           <div className="composer-actions">
             <button className="text-button" type="button" onClick={() => setShowComposer(false)}>
@@ -145,6 +186,8 @@ export function EmployerDashboard() {
         <DashboardStat icon="clock" label="Đang xem xét" value={stats.reviewing} tone="amber" />
         <DashboardStat icon="check" label="Đã chấp nhận" value={stats.accepted} tone="coral" />
       </section>
+
+      {actionMessage ? <p className="dashboard-message" role="status">{actionMessage}</p> : null}
 
       <section className="management-card">
         <div className="management-tabs">
@@ -197,8 +240,12 @@ export function EmployerDashboard() {
                     <td>{job.deadline}</td>
                     <td>
                       {job.status === "Published" ? (
-                        <button className="table-action" type="button" onClick={() => closeJob(job.id)}>
+                        <button className="table-action" type="button" onClick={() => changeJobState(job.id, "close")}>
                           Đóng tin
+                        </button>
+                      ) : job.status === "Draft" ? (
+                        <button className="table-action publish-action" type="button" onClick={() => changeJobState(job.id, "publish")}>
+                          Đăng tin
                         </button>
                       ) : (
                         <span className="muted-action">—</span>
@@ -247,7 +294,7 @@ export function EmployerDashboard() {
                         className="status-select"
                         value={candidate.status}
                         onChange={(event) =>
-                          updateCandidateStatus(candidate.id, event.target.value as CandidateRow["status"])
+                          void updateCandidateStatus(candidate.id, event.target.value as CandidateRow["status"])
                         }
                       >
                         {Object.entries(candidateStatusLabels).map(([value, label]) => (

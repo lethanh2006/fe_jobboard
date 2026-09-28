@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { JobSearch } from "@/components/job-search";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getJobs } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Tìm việc làm",
@@ -18,6 +19,7 @@ type JobsPageProps = {
 
 export default async function JobsPage({ searchParams }: JobsPageProps) {
   const filters = await searchParams;
+  const jobs = await getJobs();
 
   return (
     <>
@@ -32,6 +34,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
         </section>
         <div className="shell listing-content">
           <JobSearch
+            availableJobs={jobs}
             initialKeyword={filters.keyword}
             initialLocation={filters.location}
             initialCategory={filters.category}

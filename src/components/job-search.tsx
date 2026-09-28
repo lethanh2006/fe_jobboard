@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import { Icon } from "@/components/icon";
 import { JobCard } from "@/components/job-card";
-import { jobs } from "@/data/jobs";
+import type { Job } from "@/types/job";
 
 type JobSearchProps = {
+  availableJobs: Job[];
   initialKeyword?: string;
   initialLocation?: string;
   initialCategory?: string;
@@ -14,6 +15,7 @@ type JobSearchProps = {
 const pageSize = 4;
 
 export function JobSearch({
+  availableJobs,
   initialKeyword = "",
   initialLocation = "",
   initialCategory = "",
@@ -30,7 +32,7 @@ export function JobSearch({
     const normalizedKeyword = keyword.trim().toLocaleLowerCase("vi");
     const normalizedLocation = location.trim().toLocaleLowerCase("vi");
 
-    return jobs
+    return availableJobs
       .filter((job) => {
         const searchableText = [job.title, job.company, ...job.skills]
           .join(" ")
@@ -52,7 +54,7 @@ export function JobSearch({
 
         return second.postedAt.localeCompare(first.postedAt);
       });
-  }, [category, keyword, level, location, minimumSalary, sort]);
+  }, [availableJobs, category, keyword, level, location, minimumSalary, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filteredJobs.length / pageSize));
   const safePage = Math.min(page, pageCount);

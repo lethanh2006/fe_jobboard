@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ApplyButton } from "@/components/apply-button";
 import { Icon } from "@/components/icon";
 import { JobCard } from "@/components/job-card";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getJobById, jobs } from "@/data/jobs";
+import { jobs as fallbackJobs } from "@/data/jobs";
+import { getJobById, getJobs } from "@/lib/api";
 import { formatDate, formatSalary } from "@/lib/format";
 
 type JobDetailPageProps = {
@@ -13,12 +15,12 @@ type JobDetailPageProps = {
 };
 
 export function generateStaticParams() {
-  return jobs.map((job) => ({ id: String(job.id) }));
+  return fallbackJobs.map((job) => ({ id: String(job.id) }));
 }
 
 export async function generateMetadata({ params }: JobDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const job = getJobById(Number(id));
+  const job = await getJobById(Number(id));
 
   return job
     ? {
@@ -30,13 +32,13 @@ export async function generateMetadata({ params }: JobDetailPageProps): Promise<
 
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = await params;
-  const job = getJobById(Number(id));
+  const job = await getJobById(Number(id));
 
   if (!job) {
     notFound();
   }
 
-  const relatedJobs = jobs
+  const relatedJobs = (await getJobs())
     .filter((item) => item.id !== job.id)
     .sort((first, second) => {
       const firstScore = first.category === job.category ? 1 : 0;
@@ -75,9 +77,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 </span>
               </div>
             </div>
-            <Link className="button hero-apply-button" href={`/dang-nhap?redirect=/viec-lam/${job.id}`}>
-              Ứng tuyển ngay <Icon name="arrow" />
-            </Link>
+            <ApplyButton jobId={job.id} />
           </div>
         </section>
 
@@ -132,9 +132,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                   <strong>{formatDate(job.deadline)}</strong>
                 </div>
               </div>
-              <Link className="button full-button" href={`/dang-nhap?redirect=/viec-lam/${job.id}`}>
-                Ứng tuyển vị trí này
-              </Link>
+              <ApplyButton jobId={job.id} fullWidth />
               <p className="safe-note">Hồ sơ của bạn chỉ được gửi khi bạn xác nhận.</p>
             </div>
 

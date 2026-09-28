@@ -3,11 +3,13 @@ import { Icon } from "@/components/icon";
 import { JobCard } from "@/components/job-card";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { categories, jobs } from "@/data/jobs";
+import { categories } from "@/data/jobs";
+import { getJobs } from "@/lib/api";
 
 const trustedCompanies = ["NOVA", "LUMI", "CLOUDNINE", "MƠ LAB", "FINORA"];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const jobs = await getJobs();
   const featuredJobs = jobs.filter((job) => job.featured);
 
   return (

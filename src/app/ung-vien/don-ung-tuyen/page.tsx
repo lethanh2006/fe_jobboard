@@ -5,20 +5,27 @@ import { Icon } from "@/components/icon";
 import { JobCard } from "@/components/job-card";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { demoApplications, getJobById, jobs } from "@/data/jobs";
+import { getCandidateApplications, getJobs } from "@/lib/api";
 import { formatDate } from "@/lib/format";
+import type { JobApplication } from "@/types/job";
 
 export const metadata: Metadata = {
   title: "Đơn ứng tuyển của tôi",
   description: "Theo dõi tiến trình các đơn ứng tuyển trên JobBoard.",
 };
 
-export default function CandidateApplicationsPage() {
-  const applications = demoApplications.flatMap((application) => {
-    const job = getJobById(application.jobId);
+export default async function CandidateApplicationsPage() {
+  const [applicationHistory, jobs] = await Promise.all([
+    getCandidateApplications(20),
+    getJobs(),
+  ]);
+  const applications = applicationHistory.flatMap((application) => {
+    const job = jobs.find((item) => item.id === application.jobId);
     return job ? [{ application, job }] : [];
   });
-  const recommendations = jobs.filter((job) => !demoApplications.some((item) => item.jobId === job.id)).slice(0, 3);
+  const recommendations = jobs
+    .filter((job) => !applicationHistory.some((item) => item.jobId === job.id))
+    .slice(0, 3);
 
   return (
     <>
@@ -140,7 +147,7 @@ export default function CandidateApplicationsPage() {
   );
 }
 
-function ApplicationProgress({ status }: { status: (typeof demoApplications)[number]["status"] }) {
+function ApplicationProgress({ status }: { status: JobApplication["status"] }) {
   const currentStep = status === "Submitted" ? 1 : status === "Reviewing" ? 2 : 3;
   const finalLabel = status === "Accepted" ? "Đã chấp nhận" : status === "Rejected" ? "Kết thúc" : "Kết quả";
 

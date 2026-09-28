@@ -31,3 +31,20 @@ export type JobApplication = {
   status: "Submitted" | "Reviewing" | "Accepted" | "Rejected";
   appliedAt: string;
 };
+
+export type ApplicationView = JobApplication & {
+  candidateId: number;
+  candidateName: string;
+  jobTitle: string;
+  company: string;
+  location: string;
+};
+
+export type EmployerJob = {
+  id: number;
+  title: string;
+  status: "Draft" | "Published" | "Closed";
+  applications: number;
+  deadline: string;
+  postedAt: string;
+};
