@@ -43,6 +43,16 @@ export async function requireRole(
   role: UserRole,
   returnPath: string,
 ): Promise<AuthSession> {
+  const session = await requireSession(returnPath);
+
+  if (session.user.role !== role) {
+    redirect(session.user.role === "Employer" ? "/nha-tuyen-dung" : "/viec-lam");
+  }
+
+  return session;
+}
+
+export async function requireSession(returnPath: string): Promise<AuthSession> {
   const session = await getSession();
 
   if (!session) {
@@ -51,10 +61,6 @@ export async function requireRole(
     }
 
     redirect(`/dang-nhap?redirect=${encodeURIComponent(returnPath)}`);
-  }
-
-  if (session.user.role !== role) {
-    redirect(session.user.role === "Employer" ? "/nha-tuyen-dung" : "/viec-lam");
   }
 
   return session;

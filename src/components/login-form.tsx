@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icon";
 import type { AuthUser } from "@/types/auth";
 
-export function LoginForm({ redirectTo }: { redirectTo?: string }) {
+export function LoginForm({
+  redirectTo,
+  passwordChanged = false,
+}: {
+  redirectTo?: string;
+  passwordChanged?: boolean;
+}) {
   const router = useRouter();
   const [message, setMessage] = useState("");
 
@@ -64,6 +70,13 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
         <div className="login-notice">
           <Icon name="briefcase" />
           Đăng nhập để tiếp tục ứng tuyển công việc bạn đã chọn.
+        </div>
+      ) : null}
+
+      {passwordChanged ? (
+        <div className="login-notice">
+          <Icon name="check" />
+          Đổi mật khẩu thành công. Vui lòng đăng nhập lại bằng mật khẩu mới.
         </div>
       ) : null}
 

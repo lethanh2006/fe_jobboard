@@ -25,7 +25,13 @@ export async function SiteHeader({ user }: { user?: AuthUser | null }) {
         <div className="header-actions">
           {currentUser ? (
             <>
-              <span className="signed-in-user">{currentUser.name}</span>
+              <Link
+                className="signed-in-user"
+                href="/tai-khoan/doi-mat-khau"
+                title="Bảo mật tài khoản"
+              >
+                {currentUser.name}
+              </Link>
               <form action="/api/auth/logout" method="post">
                 <button className="text-button" type="submit">Đăng xuất</button>
               </form>
@@ -52,9 +58,12 @@ export async function SiteHeader({ user }: { user?: AuthUser | null }) {
             <Link href="/ung-vien/don-ung-tuyen">Đơn ứng tuyển</Link>
             <Link href="/nha-tuyen-dung">Nhà tuyển dụng</Link>
             {currentUser ? (
-              <form action="/api/auth/logout" method="post">
-                <button type="submit">Đăng xuất ({currentUser.name})</button>
-              </form>
+              <>
+                <Link href="/tai-khoan/doi-mat-khau">Bảo mật tài khoản</Link>
+                <form action="/api/auth/logout" method="post">
+                  <button type="submit">Đăng xuất ({currentUser.name})</button>
+                </form>
+              </>
             ) : (
               <Link href="/dang-nhap">Đăng nhập</Link>
             )}

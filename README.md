@@ -54,6 +54,8 @@ npm run build
   vòng, cookie `HttpOnly` và đăng xuất có thu hồi phiên phía server.
 - Trang `/dang-ky` tạo tài khoản ứng viên thật, kiểm tra xác nhận mật khẩu, tự
   đăng nhập và chuyển thẳng tới hồ sơ mới sau khi đăng ký thành công.
+- Trang `/tai-khoan/doi-mat-khau` xác minh mật khẩu hiện tại, áp dụng chính sách
+  mật khẩu mạnh, thu hồi các phiên cũ và yêu cầu đăng nhập lại sau khi đổi.
 - Component dùng chung cho header, footer, thẻ việc làm và icon.
 - API client tập trung tại `src/lib/api.ts`, chịu trách nhiệm mapping enum và
   contract C# sang model hiển thị TypeScript. `src/lib/server-auth.ts` bảo vệ

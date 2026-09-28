@@ -1640,7 +1640,8 @@ a {
 /* Candidate workspace */
 .candidate-page,
 .profile-page,
-.employer-page {
+.employer-page,
+.security-page {
   min-height: 75vh;
 }
 
@@ -2633,6 +2634,14 @@ a {
   color: var(--green);
   font-size: 9px;
   font-weight: 700;
+}
+
+.password-form-card {
+  width: min(100%, 680px);
+}
+
+.password-form-message {
+  color: #9f4029 !important;
 }
 
 @media (max-width: 900px) {

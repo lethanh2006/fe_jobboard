@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ redirect?: string }>;
+  searchParams: Promise<{ redirect?: string; passwordChanged?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     navigate(session.user.role === "Employer" ? "/nha-tuyen-dung" : "/viec-lam");
   }
 
-  const { redirect } = await searchParams;
+  const { redirect, passwordChanged } = await searchParams;
 
   return (
     <main className="auth-page">
@@ -53,7 +53,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <Link className="back-home" href="/">
           ← Quay lại trang chủ
         </Link>
-        <LoginForm redirectTo={redirect} />
+        <LoginForm redirectTo={redirect} passwordChanged={passwordChanged === "1"} />
       </section>
     </main>
   );
