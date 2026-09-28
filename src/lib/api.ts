@@ -5,6 +5,7 @@ import {
 } from "@/data/jobs";
 import type {
   ApplicationView,
+  CandidateProfile,
   EmployerJob,
   Job,
   JobApplication,
@@ -264,5 +265,31 @@ export async function changeApplicationStatus(
   return request<ApiApplication>(`/applications/${applicationId}/status`, {
     method: "PATCH",
     body: JSON.stringify({ companyId, status }),
+  });
+}
+
+export async function getCandidateProfile(candidateId: number): Promise<CandidateProfile> {
+  try {
+    return await request<CandidateProfile>(`/candidates/${candidateId}/profile`);
+  } catch {
+    return {
+      id: candidateId,
+      name: "Nguyễn Minh An",
+      email: "an@example.com",
+      bio: "Backend Developer yêu thích sản phẩm có tác động thực tế và những hệ thống được thiết kế chỉn chu.",
+      desiredSalaryMin: 1800,
+      desiredSalaryMax: 2800,
+      skills: ["C#", "ASP.NET Core", "PostgreSQL", "Docker"],
+    };
+  }
+}
+
+export async function updateCandidateProfile(
+  candidateId: number,
+  profile: Omit<CandidateProfile, "id" | "name">,
+) {
+  return request<CandidateProfile>(`/candidates/${candidateId}/profile`, {
+    method: "PUT",
+    body: JSON.stringify(profile),
   });
 }

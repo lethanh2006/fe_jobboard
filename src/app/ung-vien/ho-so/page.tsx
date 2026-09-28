@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import { CandidateProfileForm } from "@/components/candidate-profile-form";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getCandidateProfile } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Hồ sơ ứng viên",
 };
 
-export default function CandidateProfilePage() {
+export default async function CandidateProfilePage() {
+  const profile = await getCandidateProfile(20);
+
   return (
     <>
       <SiteHeader />
@@ -20,7 +23,7 @@ export default function CandidateProfilePage() {
           </div>
         </section>
         <div className="shell profile-content">
-          <CandidateProfileForm />
+          <CandidateProfileForm profile={profile} />
         </div>
       </main>
       <SiteFooter />

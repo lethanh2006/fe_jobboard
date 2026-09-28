@@ -1,15 +1,35 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
+import { updateCandidateProfile } from "@/lib/api";
+import type { CandidateProfile } from "@/types/job";
 
 const skillOptions = ["C#", "ASP.NET Core", "PostgreSQL", "Docker", "TypeScript", "React"];
 
-export function CandidateProfileForm() {
-  const [saved, setSaved] = useState(false);
+export function CandidateProfileForm({ profile }: { profile: CandidateProfile }) {
+  const [message, setMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  function saveProfile(event: FormEvent<HTMLFormElement>) {
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSaved(true);
+    setIsSaving(true);
+    setMessage("");
+    const form = new FormData(event.currentTarget);
+
+    try {
+      await updateCandidateProfile(profile.id, {
+        email: String(form.get("email") ?? ""),
+        bio: String(form.get("bio") ?? ""),
+        desiredSalaryMin: Number(form.get("desiredSalaryMin")),
+        desiredSalaryMax: Number(form.get("desiredSalaryMax")),
+        skills: form.getAll("skills").map(String),
+      });
+      setMessage("Đã lưu hồ sơ trên backend.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không thể lưu hồ sơ.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -24,33 +44,39 @@ export function CandidateProfileForm() {
       <div className="form-grid">
         <label className="form-field">
           <span>Họ và tên</span>
-          <input defaultValue="Nguyễn Minh An" required />
+          <input defaultValue={profile.name} readOnly />
         </label>
         <label className="form-field">
           <span>Email</span>
-          <input defaultValue="an@example.com" type="email" required />
+          <input name="email" defaultValue={profile.email} type="email" required />
         </label>
         <label className="form-field full-field">
           <span>Giới thiệu</span>
           <textarea
-            defaultValue="Backend Developer yêu thích sản phẩm có tác động thực tế và những hệ thống được thiết kế chỉn chu."
+            name="bio"
+            defaultValue={profile.bio ?? ""}
             rows={5}
           />
         </label>
         <label className="form-field">
           <span>Mức lương mong muốn từ (USD)</span>
-          <input defaultValue="1800" min="0" type="number" />
+          <input name="desiredSalaryMin" defaultValue={profile.desiredSalaryMin ?? ""} min="0" type="number" required />
         </label>
         <label className="form-field">
           <span>Đến (USD)</span>
-          <input defaultValue="2800" min="0" type="number" />
+          <input name="desiredSalaryMax" defaultValue={profile.desiredSalaryMax ?? ""} min="0" type="number" required />
         </label>
         <fieldset className="skill-picker full-field">
           <legend>Kỹ năng</legend>
           <div>
-            {skillOptions.map((skill, index) => (
+            {skillOptions.map((skill) => (
               <label key={skill}>
-                <input defaultChecked={index < 4} type="checkbox" />
+                <input
+                  name="skills"
+                  value={skill}
+                  defaultChecked={profile.skills.includes(skill)}
+                  type="checkbox"
+                />
                 {skill}
               </label>
             ))}
@@ -58,9 +84,9 @@ export function CandidateProfileForm() {
         </fieldset>
       </div>
       <div className="profile-form-actions">
-        {saved ? <span>Đã lưu thay đổi trên bản demo.</span> : <span />}
-        <button className="button" type="submit">
-          Lưu hồ sơ
+        {message ? <span>{message}</span> : <span />}
+        <button className="button" type="submit" disabled={isSaving}>
+          {isSaving ? "Đang lưu..." : "Lưu hồ sơ"}
         </button>
       </div>
     </form>

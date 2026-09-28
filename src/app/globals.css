@@ -2437,6 +2437,12 @@ a {
   box-shadow: 0 0 0 3px rgba(31, 114, 93, 0.1);
 }
 
+.form-field input:read-only {
+  cursor: not-allowed;
+  background: #f0f3f1;
+  color: #7c8885;
+}
+
 .form-options {
   display: flex;
   align-items: center;

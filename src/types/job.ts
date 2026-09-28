@@ -48,3 +48,13 @@ export type EmployerJob = {
   deadline: string;
   postedAt: string;
 };
+
+export type CandidateProfile = {
+  id: number;
+  name: string;
+  email: string;
+  bio: string | null;
+  desiredSalaryMin: number | null;
+  desiredSalaryMax: number | null;
+  skills: string[];
+};

@@ -34,8 +34,8 @@ npm run build
   mức lương, sắp xếp và phân trang trên client.
 - Trang `/viec-lam/[id]` hiển thị mô tả, yêu cầu, quyền lợi, tổng quan, việc
   liên quan và gửi đơn ứng tuyển thật tới backend.
-- Không gian ứng viên gồm lịch sử/trạng thái ứng tuyển và form cập nhật hồ sơ,
-  kỹ năng, khoảng lương mong muốn.
+- Không gian ứng viên đọc lịch sử/trạng thái ứng tuyển và cập nhật hồ sơ, kỹ
+  năng, khoảng lương mong muốn qua API.
 - Dashboard nhà tuyển dụng gọi API để tạo/đăng/đóng tin và cập nhật trạng thái
   ứng viên; thay đổi được giữ trong phiên chạy backend.
 - Trang đăng nhập responsive đã chuẩn bị luồng redirect; thao tác xác thực sẽ
