@@ -65,6 +65,13 @@ npm run build
 - Trang `/quan-tri` (chỉ quản trị viên): tổng quan số liệu, danh sách tin/công ty/tài
   khoản có lọc và phân trang, gỡ/khôi phục tin (bắt buộc nhập lý do), khóa/mở khóa
   công ty và tài khoản, và nhật ký thao tác. Nhà tuyển dụng thấy lý do khi tin bị gỡ.
+- Trang `/thong-bao` cho mọi tài khoản đã đăng nhập: danh sách mới nhất trước, phân
+  trang 20 mục, lọc chưa đọc, đánh dấu từng mục hoặc tất cả đã đọc. Mở thông báo sẽ
+  đánh dấu đã đọc và chuyển đến việc làm, đơn ứng tuyển hoặc màn hình quản lý;
+  thông báo đơn mới mở thẳng hồ sơ ứng viên của đúng công ty.
+- Chuông thông báo trên cả desktop/mobile hiển thị số chưa đọc, cập nhật mỗi 60
+  giây khi tab đang hiển thị, khi quay lại cửa sổ và sau thao tác đánh dấu đã đọc.
+  Khi tải lỗi, hộp thông báo hiển thị nút thử lại; không thay bằng dữ liệu demo.
 - Trang `/dang-ky` tạo tài khoản ứng viên thật, kiểm tra xác nhận mật khẩu, tự
   đăng nhập và chuyển thẳng tới hồ sơ mới sau khi đăng ký thành công.
 - Trang `/tai-khoan/doi-mat-khau` xác minh mật khẩu hiện tại, áp dụng chính sách

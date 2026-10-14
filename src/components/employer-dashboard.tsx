@@ -43,14 +43,18 @@ export function EmployerDashboard({
   employerName,
   initialEmployerJobs,
   initialApplications,
+  initialView = "jobs",
+  initialApplicationId = null,
 }: {
   companyId: number;
   companyName: string;
   employerName: string;
   initialEmployerJobs: EmployerJob[];
   initialApplications: ApplicationView[];
+  initialView?: "jobs" | "candidates";
+  initialApplicationId?: number | null;
 }) {
-  const [activeView, setActiveView] = useState<"jobs" | "candidates">("jobs");
+  const [activeView, setActiveView] = useState<"jobs" | "candidates">(initialView);
   const [employerJobs, setEmployerJobs] = useState(initialEmployerJobs);
   const [applications, setApplications] = useState(initialApplications);
   const [editor, setEditor] = useState<Editor>({ mode: "closed" });
@@ -58,7 +62,7 @@ export function EmployerDashboard({
   const [jobFilter, setJobFilter] = useState(0);
   const [statusFilter, setStatusFilter] = useState<JobApplication["status"] | "all">("all");
   const [sortBy, setSortBy] = useState<"match" | "newest">("match");
-  const [openApplicationId, setOpenApplicationId] = useState<number | null>(null);
+  const [openApplicationId, setOpenApplicationId] = useState<number | null>(initialApplicationId);
 
   const stats = useMemo(
     () => ({

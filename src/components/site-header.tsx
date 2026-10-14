@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { NotificationLink } from "@/components/notification-link";
 import { getSession } from "@/lib/server-auth";
 import type { AuthUser, UserRole } from "@/types/auth";
 
@@ -83,6 +84,8 @@ export async function SiteHeader({ user }: { user?: AuthUser | null }) {
             {primaryAction.label}
           </Link>
         </div>
+
+        {currentUser ? <NotificationLink key={currentUser.id} /> : null}
 
         <details className="mobile-menu">
           <summary className="menu-button" aria-label="Mở menu">

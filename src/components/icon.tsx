@@ -1,6 +1,7 @@
 import type { SVGProps } from "react";
 
 type IconName =
+  | "bell"
   | "arrow"
   | "briefcase"
   | "chart"
@@ -18,6 +19,7 @@ type IconName =
 type IconProps = SVGProps<SVGSVGElement> & { name: IconName };
 
 const paths: Record<IconName, React.ReactNode> = {
+  bell: <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />,
   arrow: <path d="m9 18 6-6-6-6" />,
   briefcase: (
     <>
