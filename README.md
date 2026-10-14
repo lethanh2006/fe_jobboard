@@ -35,8 +35,11 @@ request đúng một lần. Những request ghi từ origin khác bị từ ch�
 ```bash
 npm run lint
 npm run typecheck
+npm test
 npm run build
 ```
+
+`npm test` chạy bằng bộ chạy test có sẵn của Node (không thêm dependency) cho các hàm bảo mật như kiểm tra origin.
 
 ## Phạm vi hiện tại
 
