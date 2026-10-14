@@ -1,26 +1,26 @@
 "use client";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { ApplicantDrawer } from "@/components/applicant-drawer";
+import { EmployerJobForm } from "@/components/employer-job-form";
 import { Icon } from "@/components/icon";
 import {
   changeApplicationStatus,
   changeEmployerJobState,
   createEmployerJob,
+  getEmployerJobDetail,
+  updateEmployerJob,
 } from "@/lib/api";
-import type { ApplicationView, EmployerJob, JobApplication } from "@/types/job";
+import { formatDate } from "@/lib/format";
+import type {
+  ApplicationView,
+  EmployerJob,
+  EmployerJobDetail,
+  JobApplication,
+  JobFormInput,
+} from "@/types/job";
 
-type DashboardJob = EmployerJob & {
-  views: number;
-};
-
-type CandidateRow = {
-  id: number;
-  name: string;
-  role: string;
-  job: string;
-  match: number;
-  status: JobApplication["status"];
-};
+type Editor = { mode: "closed" } | { mode: "create" } | { mode: "edit"; job: EmployerJobDetail };
 
 const jobStatusLabels: Record<EmployerJob["status"], string> = {
   Draft: "Bản nháp",
@@ -28,7 +28,7 @@ const jobStatusLabels: Record<EmployerJob["status"], string> = {
   Closed: "Đã đóng",
 };
 
-const candidateStatusLabels: Record<CandidateRow["status"], string> = {
+const candidateStatusLabels: Record<JobApplication["status"], string> = {
   Submitted: "Mới nhận",
   Reviewing: "Đang xem xét",
   Accepted: "Chấp nhận",
@@ -49,86 +49,99 @@ export function EmployerDashboard({
   initialApplications: ApplicationView[];
 }) {
   const [activeView, setActiveView] = useState<"jobs" | "candidates">("jobs");
-  const [employerJobs, setEmployerJobs] = useState<DashboardJob[]>(
-    initialEmployerJobs.map((job) => ({ ...job, views: 0 })),
-  );
-  const [candidates, setCandidates] = useState<CandidateRow[]>(
-    initialApplications.map((application, index) => ({
-      id: application.id,
-      name: application.candidateName,
-      role: "Ứng viên JobBoard",
-      job: application.jobTitle,
-      match: Math.max(74, 94 - index * 5),
-      status: application.status,
-    })),
-  );
-  const [showComposer, setShowComposer] = useState(false);
+  const [employerJobs, setEmployerJobs] = useState(initialEmployerJobs);
+  const [applications, setApplications] = useState(initialApplications);
+  const [editor, setEditor] = useState<Editor>({ mode: "closed" });
   const [actionMessage, setActionMessage] = useState("");
+  const [jobFilter, setJobFilter] = useState(0);
+  const [statusFilter, setStatusFilter] = useState<JobApplication["status"] | "all">("all");
+  const [sortBy, setSortBy] = useState<"match" | "newest">("match");
+  const [openApplicationId, setOpenApplicationId] = useState<number | null>(null);
 
   const stats = useMemo(
     () => ({
       activeJobs: employerJobs.filter((job) => job.status === "Published").length,
       applications: employerJobs.reduce((total, job) => total + job.applications, 0),
-      reviewing: candidates.filter((candidate) => candidate.status === "Reviewing").length,
-      accepted: candidates.filter((candidate) => candidate.status === "Accepted").length,
+      reviewing: applications.filter((application) => application.status === "Reviewing").length,
+      accepted: applications.filter((application) => application.status === "Accepted").length,
     }),
-    [candidates, employerJobs],
+    [applications, employerJobs],
   );
+
+  const visibleApplications = useMemo(
+    () =>
+      applications
+        .filter(
+          (application) =>
+            (jobFilter === 0 || application.jobId === jobFilter) &&
+            (statusFilter === "all" || application.status === statusFilter),
+        )
+        .sort((first, second) =>
+          sortBy === "match"
+            ? (second.matchScore ?? 0) - (first.matchScore ?? 0) || second.id - first.id
+            : second.appliedAt.localeCompare(first.appliedAt) || second.id - first.id,
+        ),
+    [applications, jobFilter, sortBy, statusFilter],
+  );
+
+  function reportError(error: unknown, fallback: string) {
+    setActionMessage(error instanceof Error ? error.message : fallback);
+  }
 
   async function changeJobState(id: number, action: "publish" | "close") {
     try {
       const updated = await changeEmployerJobState(companyId, id, action);
       setEmployerJobs((currentJobs) =>
-        currentJobs.map((job) =>
-          job.id === id ? { ...job, status: updated.status } : job,
-        ),
+        currentJobs.map((job) => (job.id === id ? { ...job, status: updated.status } : job)),
       );
       setActionMessage(action === "close" ? "Đã đóng tin tuyển dụng." : "Đã đăng tin tuyển dụng.");
     } catch (error) {
-      setActionMessage(error instanceof Error ? error.message : "Không thể cập nhật tin.");
+      reportError(error, "Không thể cập nhật tin.");
     }
   }
 
-  async function updateCandidateStatus(id: number, status: CandidateRow["status"]) {
+  async function openEditor(jobId: number) {
+    try {
+      setEditor({ mode: "edit", job: await getEmployerJobDetail(companyId, jobId) });
+      setActionMessage("");
+    } catch (error) {
+      reportError(error, "Không thể tải nội dung tin.");
+    }
+  }
+
+  async function saveJob(input: JobFormInput) {
+    if (editor.mode === "edit") {
+      const updated = await updateEmployerJob(companyId, editor.job.id, input);
+      setEmployerJobs((currentJobs) =>
+        currentJobs.map((job) =>
+          job.id === updated.id
+            ? { ...job, title: updated.title, deadline: updated.deadline }
+            : job,
+        ),
+      );
+      setActionMessage("Đã lưu thay đổi của tin tuyển dụng.");
+    } else {
+      const created = await createEmployerJob(companyId, input);
+      setEmployerJobs((currentJobs) => [created, ...currentJobs]);
+      setActionMessage("Đã lưu bản nháp. Bấm “Đăng tin” để hiển thị cho ứng viên.");
+    }
+
+    setEditor({ mode: "closed" });
+  }
+
+  async function updateCandidateStatus(id: number, status: JobApplication["status"]) {
     try {
       await changeApplicationStatus(id, status);
-      setCandidates((currentCandidates) =>
-        currentCandidates.map((candidate) =>
-          candidate.id === id ? { ...candidate, status } : candidate,
-        ),
+      setApplications((current) =>
+        current.map((application) => (application.id === id ? { ...application, status } : application)),
       );
       setActionMessage("Đã cập nhật trạng thái ứng viên.");
     } catch (error) {
-      setActionMessage(error instanceof Error ? error.message : "Không thể cập nhật ứng viên.");
+      reportError(error, "Không thể cập nhật ứng viên.");
     }
   }
 
-  async function addDraft(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const title = String(form.get("title") ?? "").trim();
-    const deadline = String(form.get("deadline") ?? "").trim();
-
-    if (!title) {
-      return;
-    }
-
-    try {
-      const job = await createEmployerJob(companyId, {
-        title,
-        deadline,
-        location: "TP. Hồ Chí Minh",
-        salaryMin: 1500,
-        salaryMax: 2500,
-      });
-      setEmployerJobs((currentJobs) => [{ ...job, views: 0 }, ...currentJobs]);
-      event.currentTarget.reset();
-      setShowComposer(false);
-      setActionMessage("Đã lưu bản nháp trên backend.");
-    } catch (error) {
-      setActionMessage(error instanceof Error ? error.message : "Không thể tạo bản nháp.");
-    }
-  }
+  const openApplication = applications.find((application) => application.id === openApplicationId);
 
   return (
     <>
@@ -138,34 +151,25 @@ export function EmployerDashboard({
           <h1>Chào buổi sáng, {employerName}</h1>
           <p>Đây là tình hình tuyển dụng của đội ngũ trong tuần này.</p>
         </div>
-        <button className="button" type="button" onClick={() => setShowComposer((visible) => !visible)}>
+        <button
+          className="button"
+          type="button"
+          onClick={() => {
+            setEditor(editor.mode === "create" ? { mode: "closed" } : { mode: "create" });
+            setActionMessage("");
+          }}
+        >
           <span className="button-plus">+</span> Đăng tin mới
         </button>
       </section>
 
-      {showComposer ? (
-        <form className="job-composer" onSubmit={addDraft}>
-          <div>
-            <span className="section-kicker">Tin tuyển dụng mới</span>
-            <h2>Tạo nhanh bản nháp</h2>
-          </div>
-          <label>
-            <span>Chức danh</span>
-            <input name="title" required placeholder="Ví dụ: Senior Backend Developer" />
-          </label>
-          <label>
-            <span>Hạn ứng tuyển</span>
-            <input name="deadline" type="date" required />
-          </label>
-          <div className="composer-actions">
-            <button className="text-button" type="button" onClick={() => setShowComposer(false)}>
-              Hủy
-            </button>
-            <button className="button button-small" type="submit">
-              Lưu bản nháp
-            </button>
-          </div>
-        </form>
+      {editor.mode !== "closed" ? (
+        <EmployerJobForm
+          key={editor.mode === "edit" ? editor.job.id : "new"}
+          initial={editor.mode === "edit" ? editor.job : undefined}
+          onSubmit={saveJob}
+          onCancel={() => setEditor({ mode: "closed" })}
+        />
       ) : null}
 
       <section className="employer-stats">
@@ -192,113 +196,200 @@ export function EmployerDashboard({
               type="button"
               onClick={() => setActiveView("candidates")}
             >
-              Ứng viên gần đây
+              Ứng viên
             </button>
           </div>
-          <span>Cập nhật tức thì trên bản demo</span>
+          <span>
+            {activeView === "jobs"
+              ? `${employerJobs.length} tin`
+              : `${visibleApplications.length}/${applications.length} đơn ứng tuyển`}
+          </span>
         </div>
 
         {activeView === "jobs" ? (
-          <div className="responsive-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Vị trí</th>
-                  <th>Trạng thái</th>
-                  <th>Ứng viên</th>
-                  <th>Lượt xem</th>
-                  <th>Hạn tuyển</th>
-                  <th aria-label="Thao tác" />
-                </tr>
-              </thead>
-              <tbody>
-                {employerJobs.map((job) => (
-                  <tr key={job.id}>
-                    <td>
-                      <strong>{job.title}</strong>
-                      <span>Mã tin #{String(job.id).padStart(3, "0")}</span>
-                    </td>
-                    <td>
-                      <span className={`job-state job-state-${job.status.toLowerCase()}`}>
-                        {jobStatusLabels[job.status]}
-                      </span>
-                    </td>
-                    <td>{job.applications}</td>
-                    <td>{job.views}</td>
-                    <td>{job.deadline}</td>
-                    <td>
-                      {job.status === "Published" ? (
-                        <button className="table-action" type="button" onClick={() => changeJobState(job.id, "close")}>
-                          Đóng tin
-                        </button>
-                      ) : job.status === "Draft" ? (
-                        <button className="table-action publish-action" type="button" onClick={() => changeJobState(job.id, "publish")}>
-                          Đăng tin
-                        </button>
-                      ) : (
-                        <span className="muted-action">—</span>
-                      )}
-                    </td>
+          employerJobs.length > 0 ? (
+            <div className="responsive-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Vị trí</th>
+                    <th>Trạng thái</th>
+                    <th>Ứng viên</th>
+                    <th>Hạn tuyển</th>
+                    <th aria-label="Thao tác" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="responsive-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Ứng viên</th>
-                  <th>Ứng tuyển vị trí</th>
-                  <th>Phù hợp</th>
-                  <th>Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody>
-                {candidates.map((candidate) => (
-                  <tr key={candidate.id}>
-                    <td>
-                      <div className="candidate-cell">
-                        <span className="avatar small-avatar">
-                          {candidate.name
-                            .split(" ")
-                            .slice(-2)
-                            .map((part) => part[0])
-                            .join("")}
+                </thead>
+                <tbody>
+                  {employerJobs.map((job) => (
+                    <tr key={job.id}>
+                      <td>
+                        <strong>{job.title}</strong>
+                        <span>Mã tin #{String(job.id).padStart(3, "0")}</span>
+                      </td>
+                      <td>
+                        <span className={`job-state job-state-${job.status.toLowerCase()}`}>
+                          {jobStatusLabels[job.status]}
                         </span>
-                        <div>
-                          <strong>{candidate.name}</strong>
-                          <span>{candidate.role}</span>
+                      </td>
+                      <td>
+                        {job.applications > 0 ? (
+                          <button
+                            className="table-link"
+                            type="button"
+                            onClick={() => {
+                              setJobFilter(job.id);
+                              setActiveView("candidates");
+                            }}
+                          >
+                            {job.applications} đơn
+                          </button>
+                        ) : (
+                          0
+                        )}
+                      </td>
+                      <td>{formatDate(job.deadline)}</td>
+                      <td>
+                        <div className="row-actions">
+                          {job.status !== "Closed" ? (
+                            <button className="table-action table-action-neutral" type="button" onClick={() => openEditor(job.id)}>
+                              Sửa
+                            </button>
+                          ) : null}
+                          {job.status === "Published" ? (
+                            <button className="table-action" type="button" onClick={() => changeJobState(job.id, "close")}>
+                              Đóng tin
+                            </button>
+                          ) : job.status === "Draft" ? (
+                            <button className="table-action publish-action" type="button" onClick={() => changeJobState(job.id, "publish")}>
+                              Đăng tin
+                            </button>
+                          ) : (
+                            <span className="muted-action">—</span>
+                          )}
                         </div>
-                      </div>
-                    </td>
-                    <td>{candidate.job}</td>
-                    <td>
-                      <span className="match-pill">{candidate.match}%</span>
-                    </td>
-                    <td>
-                      <select
-                        className="status-select"
-                        value={candidate.status}
-                        onChange={(event) =>
-                          void updateCandidateStatus(candidate.id, event.target.value as CandidateRow["status"])
-                        }
-                      >
-                        {Object.entries(candidateStatusLabels).map(([value, label]) => (
-                          <option value={value} key={value}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="table-empty">Công ty chưa có tin nào. Bấm “Đăng tin mới” để bắt đầu.</p>
+          )
+        ) : (
+          <>
+            <div className="table-toolbar">
+              <label>
+                <span>Tin tuyển dụng</span>
+                <select value={jobFilter} onChange={(event) => setJobFilter(Number(event.target.value))}>
+                  <option value={0}>Tất cả tin</option>
+                  {employerJobs.map((job) => (
+                    <option value={job.id} key={job.id}>
+                      {job.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Trạng thái</span>
+                <select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value as JobApplication["status"] | "all")}
+                >
+                  <option value="all">Tất cả</option>
+                  {Object.entries(candidateStatusLabels).map(([value, label]) => (
+                    <option value={value} key={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Sắp xếp</span>
+                <select value={sortBy} onChange={(event) => setSortBy(event.target.value as "match" | "newest")}>
+                  <option value="match">Phù hợp nhất</option>
+                  <option value="newest">Mới nhất</option>
+                </select>
+              </label>
+            </div>
+            {visibleApplications.length > 0 ? (
+              <div className="responsive-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Ứng viên</th>
+                      <th>Ứng tuyển vị trí</th>
+                      <th>Phù hợp</th>
+                      <th>Ngày nộp</th>
+                      <th>Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleApplications.map((application) => (
+                      <tr key={application.id}>
+                        <td>
+                          <div className="candidate-cell">
+                            <span className="avatar small-avatar">
+                              {application.candidateName
+                                .split(" ")
+                                .slice(-2)
+                                .map((part) => part[0])
+                                .join("")}
+                            </span>
+                            <div>
+                              <button className="candidate-name-button" type="button" onClick={() => setOpenApplicationId(application.id)}>
+                                {application.candidateName}
+                              </button>
+                              <span>Xem hồ sơ</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>{application.jobTitle}</td>
+                        <td>
+                          <span className="match-pill">{application.matchScore ?? 0}%</span>
+                        </td>
+                        <td>{formatDate(application.appliedAt)}</td>
+                        <td>
+                          <select
+                            className="status-select"
+                            aria-label={`Trạng thái đơn của ${application.candidateName}`}
+                            value={application.status}
+                            onChange={(event) =>
+                              void updateCandidateStatus(application.id, event.target.value as JobApplication["status"])
+                            }
+                          >
+                            {Object.entries(candidateStatusLabels).map(([value, label]) => (
+                              <option value={value} key={value}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="table-empty">
+                {applications.length === 0
+                  ? "Chưa có ứng viên nào ứng tuyển."
+                  : "Không có đơn nào khớp bộ lọc hiện tại."}
+              </p>
+            )}
+          </>
         )}
       </section>
+
+      {openApplication ? (
+        <ApplicantDrawer
+          companyId={companyId}
+          applicationId={openApplication.id}
+          status={openApplication.status}
+          onStatusChange={(status) => void updateCandidateStatus(openApplication.id, status)}
+          onClose={() => setOpenApplicationId(null)}
+        />
+      ) : null}
     </>
   );
 }

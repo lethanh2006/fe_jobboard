@@ -4,11 +4,14 @@ import {
 } from "@/data/jobs";
 import { backendApiUrl } from "@/lib/api-config";
 import type {
+  ApplicantDetail,
   ApplicationView,
   CandidateProfile,
   EmployerJob,
+  EmployerJobDetail,
   Job,
   JobApplication,
+  JobFormInput,
   JobLevel,
   WorkMode,
 } from "@/types/job";
@@ -54,6 +57,7 @@ type ApiApplication = {
   location?: string;
   status: JobApplication["status"];
   appliedAt: string;
+  matchScore?: number;
 };
 
 type ApiProblem = {
@@ -127,6 +131,7 @@ function mapApplication(application: ApiApplication): ApplicationView {
     location: application.location ?? fallbackJob?.location ?? "Đang cập nhật",
     status: application.status,
     appliedAt: toDateOnly(application.appliedAt),
+    matchScore: application.matchScore,
   };
 }
 
@@ -220,11 +225,7 @@ export async function getEmployerJobs(
     undefined,
     accessToken,
   );
-  return result.map((job) => ({
-    ...job,
-    deadline: toDateOnly(job.deadline),
-    postedAt: toDateOnly(job.postedAt),
-  }));
+  return result.map(mapEmployerJob);
 }
 
 export async function getEmployerApplications(
@@ -239,36 +240,67 @@ export async function getEmployerApplications(
   return result.map(mapApplication);
 }
 
-export async function createEmployerJob(
-  companyId: number,
-  input: {
-    title: string;
-    deadline: string;
-    location: string;
-    salaryMin: number;
-    salaryMax: number;
-  },
-) {
-  const job = await request<EmployerJob>(`/employers/${companyId}/jobs`, {
-    method: "POST",
-    body: JSON.stringify({
-      title: input.title,
-      location: input.location,
-      salaryMin: input.salaryMin,
-      salaryMax: input.salaryMax,
-      deadline: `${input.deadline}T23:59:59Z`,
-      level: "Middle",
-      workMode: "Hybrid",
-      category: "Công nghệ",
-      summary: "Tin tuyển dụng mới từ Nova Technology.",
-      skills: [],
-    }),
-  });
+function toJobPayload(input: JobFormInput) {
+  return {
+    ...input,
+    // Hạn nộp là cuối ngày được chọn; giữ nguyên ngày khi hiển thị lại (toDateOnly).
+    deadline: `${input.deadline}T23:59:59Z`,
+  };
+}
 
+function mapEmployerJob<T extends EmployerJob>(job: T): T {
   return {
     ...job,
     deadline: toDateOnly(job.deadline),
     postedAt: toDateOnly(job.postedAt),
+  };
+}
+
+export async function createEmployerJob(companyId: number, input: JobFormInput) {
+  return mapEmployerJob(
+    await request<EmployerJob>(`/employers/${companyId}/jobs`, {
+      method: "POST",
+      body: JSON.stringify(toJobPayload(input)),
+    }),
+  );
+}
+
+export async function getEmployerJobDetail(
+  companyId: number,
+  jobId: number,
+): Promise<EmployerJobDetail> {
+  return mapEmployerJob(
+    await request<EmployerJobDetail>(`/employers/${companyId}/jobs/${jobId}`),
+  );
+}
+
+export async function updateEmployerJob(
+  companyId: number,
+  jobId: number,
+  input: JobFormInput,
+): Promise<EmployerJobDetail> {
+  return mapEmployerJob(
+    await request<EmployerJobDetail>(`/employers/${companyId}/jobs/${jobId}`, {
+      method: "PUT",
+      body: JSON.stringify(toJobPayload(input)),
+    }),
+  );
+}
+
+export async function getApplicantDetail(
+  companyId: number,
+  applicationId: number,
+): Promise<ApplicantDetail> {
+  const detail = await request<
+    Omit<ApplicantDetail, "application"> & { application: ApiApplication }
+  >(`/employers/${companyId}/applications/${applicationId}`);
+
+  return {
+    ...detail,
+    application: {
+      ...mapApplication(detail.application),
+      matchScore: detail.application.matchScore ?? 0,
+    },
   };
 }
 

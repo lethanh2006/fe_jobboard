@@ -38,6 +38,8 @@ export type ApplicationView = JobApplication & {
   jobTitle: string;
   company: string;
   location: string;
+  /** Độ phù hợp 0–100; chỉ có ở danh sách phía nhà tuyển dụng. */
+  matchScore?: number;
 };
 
 export type EmployerJob = {
@@ -57,4 +59,38 @@ export type CandidateProfile = {
   desiredSalaryMin: number | null;
   desiredSalaryMax: number | null;
   skills: string[];
+};
+
+/** Giá trị enum của API (khác nhãn tiếng Việt dùng để hiển thị trong `Job`). */
+export type ApiJobLevel = "Internship" | "Junior" | "Middle" | "Senior" | "Lead";
+
+export type ApiWorkMode = "Onsite" | "Hybrid" | "Remote";
+
+/** Nội dung nhà tuyển dụng nhập khi tạo/sửa một tin. */
+export type JobFormInput = {
+  title: string;
+  location: string;
+  salaryMin: number;
+  salaryMax: number;
+  /** Ngày dạng YYYY-MM-DD. */
+  deadline: string;
+  level: ApiJobLevel;
+  workMode: ApiWorkMode;
+  category: string;
+  summary: string;
+  description: string[];
+  requirements: string[];
+  benefits: string[];
+  skills: string[];
+};
+
+export type EmployerJobDetail = EmployerJob &
+  Omit<JobFormInput, "deadline" | "title"> & { featured: boolean };
+
+export type ApplicantDetail = {
+  application: ApplicationView & { matchScore: number };
+  candidate: CandidateProfile;
+  matchedSkills: string[];
+  missingSkills: string[];
+  salaryFit: boolean;
 };

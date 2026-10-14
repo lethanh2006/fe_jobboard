@@ -2005,44 +2005,6 @@ a {
   font-weight: 400;
 }
 
-.job-composer {
-  display: grid;
-  grid-template-columns: 1fr 1.3fr 0.8fr auto;
-  align-items: end;
-  gap: 18px;
-  margin-top: 26px;
-  border: 1px solid #bcdacf;
-  border-radius: 16px;
-  background: #eaf6f1;
-  padding: 22px;
-}
-
-.job-composer h2 {
-  margin: 5px 0 0;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
-  font-weight: 500;
-}
-
-.job-composer label > span {
-  display: block;
-  margin-bottom: 7px;
-  color: #495b56;
-  font-size: 9px;
-  font-weight: 800;
-}
-
-.job-composer input {
-  width: 100%;
-  min-height: 42px;
-  border: 1px solid #cfe0da;
-  border-radius: 9px;
-  outline: 0;
-  background: white;
-  padding-inline: 12px;
-  font-size: 11px;
-}
-
 .composer-actions {
   display: flex;
   align-items: center;
@@ -2662,10 +2624,6 @@ a {
     grid-template-columns: 1fr 1fr;
   }
 
-  .job-composer {
-    grid-template-columns: 1fr 1fr;
-  }
-
   .employer-stats {
     grid-template-columns: 1fr 1fr;
   }
@@ -2708,7 +2666,6 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .job-composer,
   .employer-stats {
     grid-template-columns: 1fr;
   }
@@ -2803,5 +2760,402 @@ a {
 
   .profile-form-actions .button {
     width: 100%;
+  }
+}
+
+/* Form controls: select + gợi ý */
+.form-field select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: 0;
+  background: #fbfcfb;
+  color: var(--ink);
+  padding: 12px 13px;
+  font-size: 11px;
+}
+
+.form-field select:focus {
+  border-color: #7bb6a4;
+  box-shadow: 0 0 0 3px rgba(31, 114, 93, 0.1);
+}
+
+.form-field > span .field-hint {
+  margin-left: 4px;
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.form-error {
+  margin: 0;
+  color: #9f4029;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Soạn / sửa tin tuyển dụng */
+.job-form-card {
+  margin-top: 26px;
+  border: 1px solid #bcdacf;
+  border-radius: 17px;
+  background: white;
+  padding: 28px 30px;
+}
+
+.job-form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 20px;
+}
+
+.job-form-heading h2 {
+  margin: 5px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.job-form-card textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+
+/* Nhập kỹ năng dạng thẻ */
+.skill-input-label {
+  display: block;
+  margin-bottom: 7px;
+  color: #40514c;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.skill-input-box {
+  display: flex;
+  min-height: 43px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbfcfb;
+  padding: 6px 8px;
+}
+
+.skill-input-box:focus-within {
+  border-color: #7bb6a4;
+  box-shadow: 0 0 0 3px rgba(31, 114, 93, 0.1);
+}
+
+.skill-input-box input {
+  min-width: 150px;
+  flex: 1;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 5px 4px !important;
+  font-size: 11px;
+}
+
+.skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #cbe3da;
+  border-radius: 7px;
+  background: var(--mint);
+  color: var(--green-dark);
+  padding: 4px 4px 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.skill-chip button {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.skill-chip button:hover {
+  background: rgba(21, 84, 69, 0.14);
+}
+
+.skill-input small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+/* Bảng quản lý */
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.table-action-neutral {
+  color: #4c5d58;
+}
+
+.table-link,
+.candidate-name-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.table-link:hover,
+.candidate-name-button:hover {
+  text-decoration: underline;
+}
+
+.candidate-name-button {
+  color: var(--ink);
+  font-size: 11px;
+  text-align: left;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+  background: #fafcfb;
+  padding: 14px 20px;
+}
+
+.table-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #66746f;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.table-toolbar select {
+  max-width: 220px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  outline: 0;
+  background: white;
+  color: #4c5d58;
+  padding: 7px 9px;
+  font-size: 10px;
+}
+
+.table-empty {
+  margin: 0;
+  padding: 44px 24px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Ngăn hồ sơ ứng viên */
+.drawer-overlay {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(14, 38, 33, 0.38);
+  backdrop-filter: blur(2px);
+}
+
+.drawer-panel {
+  width: min(480px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: white;
+  padding: 26px 28px 40px;
+  box-shadow: -18px 0 50px rgba(20, 44, 40, 0.18);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.drawer-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.drawer-loading {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.drawer-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.drawer-identity h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.drawer-identity a {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.drawer-match {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #f7faf8;
+  padding: 16px;
+}
+
+.drawer-match strong,
+.drawer-match span {
+  display: block;
+}
+
+.drawer-match > div:last-child strong {
+  font-size: 11px;
+}
+
+.drawer-match > div:last-child span {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.match-ring {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--green) calc(var(--score) * 1%), #dfe8e4 0);
+  position: relative;
+}
+
+.match-ring::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: #f7faf8;
+}
+
+.match-ring strong {
+  position: relative;
+  font-size: 13px;
+}
+
+.drawer-body section {
+  margin-top: 24px;
+}
+
+.drawer-body h3 {
+  margin: 0 0 8px;
+  color: #40514c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.drawer-text {
+  margin: 0;
+  color: #4d5e59;
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.drawer-skills .skill-tag {
+  padding: 6px 9px;
+  font-size: 10px;
+}
+
+.skill-match {
+  border-color: #b6dccd;
+  background: var(--mint);
+  color: var(--green-dark);
+}
+
+.skill-missing {
+  border-style: dashed;
+  border-color: #e4c98f;
+  background: #fff8e6;
+  color: #8a621b;
+}
+
+.drawer-legend {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.drawer-application {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+
+.drawer-application .drawer-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 680px) {
+  .job-form-card {
+    padding: 22px 18px;
+  }
+
+  .drawer-panel {
+    padding: 22px 18px 36px;
+  }
+
+  .table-toolbar label {
+    width: 100%;
+    justify-content: space-between;
   }
 }
