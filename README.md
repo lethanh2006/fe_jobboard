@@ -41,6 +41,21 @@ npm run build
 
 `npm test` chạy bằng bộ chạy test có sẵn của Node (không thêm dependency) cho các hàm bảo mật như kiểm tra origin.
 
+## Docker
+
+```bash
+docker build -t jobboard-web .
+docker run --rm -p 3000:3000 -e BACKEND_API_URL=http://host.docker.internal:5000/api jobboard-web
+```
+
+Image nhiều tầng dùng đầu ra `standalone` của Next, chạy bằng người dùng không đặc quyền và có `HEALTHCHECK`.
+`BACKEND_API_URL` được đọc lúc chạy (không nhúng vào bản build). Để xem thử cả hệ thống (PostgreSQL + API + web + hộp
+thư thử nghiệm) dùng `compose.stack.yaml` ở repo backend, đặt repo này cạnh repo backend (`../fe`).
+
+Khi đặt sau reverse proxy cần chuyển tiếp `Host` (hoặc `X-Forwarded-Host`) đúng với tên miền người dùng truy cập vì
+route ghi so `Origin` với host này để chặn CSRF, và `X-Forwarded-For` để backend giới hạn tần suất theo từng người dùng
+(backend chỉ tin header này theo `TRUST_PROXY`).
+
 ## Phạm vi hiện tại
 
 - Trang chủ responsive với tìm kiếm nhanh, lĩnh vực đang tuyển (số tin lấy từ
