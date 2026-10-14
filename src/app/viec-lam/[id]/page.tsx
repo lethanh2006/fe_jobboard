@@ -4,11 +4,19 @@ import { notFound } from "next/navigation";
 import { ApplyButton } from "@/components/apply-button";
 import { Icon } from "@/components/icon";
 import { JobCard } from "@/components/job-card";
+import { JobMatchCard } from "@/components/job-match-card";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { jobs as fallbackJobs } from "@/data/jobs";
-import { getJobById, getJobs } from "@/lib/api";
+import {
+  getCandidateApplications,
+  getJobById,
+  getJobMatches,
+  searchJobs,
+} from "@/lib/api";
 import { formatDate, formatSalary } from "@/lib/format";
+import { getSession } from "@/lib/server-auth";
+import type { Job } from "@/types/job";
 
 type JobDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -18,7 +26,9 @@ export function generateStaticParams() {
   return fallbackJobs.map((job) => ({ id: String(job.id) }));
 }
 
-export async function generateMetadata({ params }: JobDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: JobDetailPageProps): Promise<Metadata> {
   const { id } = await params;
   const job = await getJobById(Number(id));
 
@@ -38,18 +48,39 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     notFound();
   }
 
-  const relatedJobs = (await getJobs())
-    .filter((item) => item.id !== job.id)
-    .sort((first, second) => {
-      const firstScore = first.category === job.category ? 1 : 0;
-      const secondScore = second.category === job.category ? 1 : 0;
-      return secondScore - firstScore;
-    })
+  const session = await getSession();
+  const candidate = session?.user.role === "Candidate" ? session : null;
+  const [sameCategory, newest, match, applications] = await Promise.all([
+    searchJobs({ category: job.category, pageSize: 4 }).catch(() => null),
+    searchJobs({ pageSize: 6 }).catch(() => null),
+    candidate
+      ? getJobMatches(candidate.user.id, [job.id], candidate.accessToken)
+          .then((matches) => matches[0] ?? null)
+          .catch(() => null)
+      : null,
+    candidate
+      ? getCandidateApplications(
+          candidate.user.id,
+          candidate.accessToken,
+        ).catch(() => [])
+      : [],
+  ]);
+  // Ưu tiên cùng lĩnh vực, thiếu thì bổ sung tin mới nhất để mục này không bị trống.
+  const relatedJobs = [...(sameCategory?.items ?? []), ...(newest?.items ?? [])]
+    .filter(
+      (item, index, all) =>
+        item.id !== job.id &&
+        all.findIndex((other) => other.id === item.id) === index,
+    )
     .slice(0, 3);
+  const alreadyApplied = applications.some(
+    (application) => application.jobId === job.id,
+  );
+  const unavailableReason = getUnavailableReason(job, session?.user.role);
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader user={session?.user ?? null} />
       <main className="job-detail-page">
         <div className="shell breadcrumb">
           <Link href="/">Trang chủ</Link>
@@ -61,7 +92,9 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
         <section className="job-detail-hero">
           <div className="shell job-detail-heading">
-            <div className={`company-logo detail-logo logo-${job.logoTone}`}>{job.logoText}</div>
+            <div className={`company-logo detail-logo logo-${job.logoTone}`}>
+              {job.logoText}
+            </div>
             <div className="job-heading-copy">
               <span>{job.company}</span>
               <h1>{job.title}</h1>
@@ -77,7 +110,11 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 </span>
               </div>
             </div>
-            <ApplyButton jobId={job.id} />
+            <ApplyButton
+              jobId={job.id}
+              alreadyApplied={alreadyApplied}
+              unavailableReason={unavailableReason}
+            />
           </div>
         </section>
 
@@ -86,8 +123,15 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
             <p className="job-lead">{job.summary}</p>
 
             <JobSection title="Bạn sẽ làm gì" items={job.description} />
-            <JobSection title="Điều chúng tôi tìm kiếm" items={job.requirements} />
-            <JobSection title="Quyền lợi dành cho bạn" items={job.benefits} checked />
+            <JobSection
+              title="Điều chúng tôi tìm kiếm"
+              items={job.requirements}
+            />
+            <JobSection
+              title="Quyền lợi dành cho bạn"
+              items={job.benefits}
+              checked
+            />
 
             <section className="detail-section">
               <h2>Kỹ năng liên quan</h2>
@@ -132,46 +176,74 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                   <strong>{formatDate(job.deadline)}</strong>
                 </div>
               </div>
-              <ApplyButton jobId={job.id} fullWidth />
-              <p className="safe-note">Hồ sơ của bạn chỉ được gửi khi bạn xác nhận.</p>
+              <ApplyButton
+                jobId={job.id}
+                fullWidth
+                alreadyApplied={alreadyApplied}
+                unavailableReason={unavailableReason}
+              />
+              <p className="safe-note">
+                Hồ sơ của bạn chỉ được gửi khi bạn xác nhận.
+              </p>
             </div>
 
+            {match ? <JobMatchCard match={match} /> : null}
+
             <div className="company-summary-card">
-              <div className={`company-logo logo-${job.logoTone}`}>{job.logoText}</div>
+              <div className={`company-logo logo-${job.logoTone}`}>
+                {job.logoText}
+              </div>
               <div>
                 <strong>{job.company}</strong>
                 <span>Nhà tuyển dụng đã xác minh</span>
               </div>
               <p>
-                Đội ngũ đề cao sự chủ động, học hỏi liên tục và những sản phẩm tạo
-                ra giá trị thực cho người dùng.
+                Đội ngũ đề cao sự chủ động, học hỏi liên tục và những sản phẩm
+                tạo ra giá trị thực cho người dùng.
               </p>
             </div>
           </aside>
         </div>
 
-        <section className="section related-section">
-          <div className="shell">
-            <div className="section-heading">
-              <div>
-                <span className="section-kicker">Có thể bạn quan tâm</span>
-                <h2>Việc làm tương tự</h2>
+        {relatedJobs.length > 0 ? (
+          <section className="section related-section">
+            <div className="shell">
+              <div className="section-heading">
+                <div>
+                  <span className="section-kicker">Có thể bạn quan tâm</span>
+                  <h2>Việc làm tương tự</h2>
+                </div>
+                <Link className="arrow-link" href="/viec-lam">
+                  Xem tất cả <Icon name="arrow" />
+                </Link>
               </div>
-              <Link className="arrow-link" href="/viec-lam">
-                Xem tất cả <Icon name="arrow" />
-              </Link>
+              <div className="featured-grid">
+                {relatedJobs.map((relatedJob) => (
+                  <JobCard job={relatedJob} key={relatedJob.id} />
+                ))}
+              </div>
             </div>
-            <div className="featured-grid">
-              {relatedJobs.map((relatedJob) => (
-                <JobCard job={relatedJob} key={relatedJob.id} />
-              ))}
-            </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
       </main>
       <SiteFooter />
     </>
   );
+}
+
+/** Lý do không cho ứng tuyển, hiển thị ngay trên nút. */
+function getUnavailableReason(job: Job, role?: string) {
+  if (job.status === "Closed") {
+    return "Tin đã đóng";
+  }
+  if (job.expired) {
+    return "Đã hết hạn nhận hồ sơ";
+  }
+  if (role === "Employer" || role === "Admin") {
+    return "Chỉ ứng viên mới ứng tuyển được";
+  }
+
+  return undefined;
 }
 
 function JobSection({

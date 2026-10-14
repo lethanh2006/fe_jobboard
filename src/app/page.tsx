@@ -3,18 +3,24 @@ import { Icon } from "@/components/icon";
 import { JobCard } from "@/components/job-card";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { categories } from "@/data/jobs";
-import { getJobs } from "@/lib/api";
+import { getCategories, searchJobs } from "@/lib/api";
+import { categoryIcon } from "@/lib/job-options";
+import { getSession } from "@/lib/server-auth";
 
 const trustedCompanies = ["NOVA", "LUMI", "CLOUDNINE", "MƠ LAB", "FINORA"];
 
 export default async function HomePage() {
-  const jobs = await getJobs();
-  const featuredJobs = jobs.filter((job) => job.featured);
+  const [session, categories, featured] = await Promise.all([
+    getSession(),
+    getCategories(),
+    searchJobs({ featured: true, pageSize: 6 }),
+  ]);
+  const featuredJobs = featured.items;
+  const openJobCount = categories.reduce((total, category) => total + category.count, 0);
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader user={session?.user ?? null} />
       <main>
         <section className="hero-section">
           <div className="hero-orb hero-orb-one" />
@@ -85,8 +91,8 @@ export default async function HomePage() {
                   <Icon name="briefcase" />
                 </span>
                 <div>
-                  <strong>328 việc làm mới</strong>
-                  <span>Được cập nhật hôm nay</span>
+                  <strong>{openJobCount} việc làm đang tuyển</strong>
+                  <span>Cập nhật liên tục mỗi ngày</span>
                 </div>
               </div>
               <div className="visual-dots" />
@@ -114,14 +120,14 @@ export default async function HomePage() {
             </Link>
           </div>
           <div className="category-grid">
-            {categories.map((category) => (
+            {categories.slice(0, 4).map((category) => (
               <Link
                 className="category-card"
                 href={`/viec-lam?category=${encodeURIComponent(category.name)}`}
                 key={category.name}
               >
                 <span className="category-icon">
-                  <Icon name={category.icon} />
+                  <Icon name={categoryIcon(category.name)} />
                 </span>
                 <div>
                   <strong>{category.name}</strong>

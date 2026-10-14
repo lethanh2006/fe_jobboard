@@ -40,16 +40,22 @@ npm run build
 
 ## Phạm vi hiện tại
 
-- Trang chủ responsive với tìm kiếm nhanh, lĩnh vực nổi bật và danh sách việc
-  làm tuyển chọn.
-- Trang `/viec-lam` hỗ trợ tìm theo từ khóa/địa điểm, lọc lĩnh vực, cấp bậc,
-  mức lương, sắp xếp và phân trang trên client.
+- Trang chủ responsive với tìm kiếm nhanh, lĩnh vực đang tuyển (số tin lấy từ
+  API) và danh sách việc làm nổi bật.
+- Trang `/viec-lam` tìm kiếm ở phía server: từ khóa/địa điểm (không phân biệt
+  dấu tiếng Việt), lĩnh vực, cấp bậc, mức lương, sắp xếp và phân trang đều nằm
+  trên URL nên chia sẻ và quay lại được. Ứng viên đăng nhập thấy độ phù hợp
+  trên từng thẻ. Khi API không khả dụng, danh sách lọc trên dữ liệu mẫu.
 - Trang `/viec-lam/[id]` hiển thị mô tả, yêu cầu, quyền lợi, tổng quan, việc
-  liên quan và gửi đơn ứng tuyển thật tới backend.
-- Không gian ứng viên được bảo vệ theo role, đọc lịch sử/trạng thái ứng tuyển và
-  cập nhật hồ sơ, kỹ năng, khoảng lương mong muốn qua API.
-- Dashboard nhà tuyển dụng gọi API để tạo/đăng/đóng tin và cập nhật trạng thái
-  ứng viên; thay đổi được giữ trong phiên chạy backend.
+  tương tự, độ phù hợp (kỹ năng khớp/thiếu) của ứng viên, trạng thái đã đóng/hết
+  hạn/đã ứng tuyển và gửi đơn ứng tuyển thật tới backend.
+- Không gian ứng viên được bảo vệ theo role: lịch sử/trạng thái ứng tuyển, mức
+  hoàn thiện hồ sơ, gợi ý việc làm theo độ phù hợp, và cập nhật hồ sơ, kỹ năng
+  (nhập tự do), khoảng lương mong muốn qua API.
+- Dashboard nhà tuyển dụng: soạn/sửa tin đầy đủ (lĩnh vực, cấp bậc, hình thức,
+  lương, hạn nộp, mô tả/yêu cầu/quyền lợi, kỹ năng), đăng/đóng tin, lọc và sắp
+  xếp ứng viên theo độ phù hợp, xem hồ sơ ứng viên trong ngăn bên và đổi trạng
+  thái đơn.
 - Trang đăng nhập gọi API JWT thật, hỗ trợ redirect an toàn, refresh token xoay
   vòng, cookie `HttpOnly` và đăng xuất có thu hồi phiên phía server.
 - Trang `/dang-ky` tạo tài khoản ứng viên thật, kiểm tra xác nhận mật khẩu, tự

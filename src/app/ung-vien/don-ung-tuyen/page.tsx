@@ -5,29 +5,41 @@ import { Icon } from "@/components/icon";
 import { JobCard } from "@/components/job-card";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getCandidateApplications, getJobs } from "@/lib/api";
+import {
+  getCandidateApplications,
+  getCandidateProfile,
+  getLogoText,
+  getRecommendedJobs,
+  logoToneFor,
+} from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { requireRole } from "@/lib/server-auth";
-import type { JobApplication } from "@/types/job";
+import type { CandidateProfile, JobApplication } from "@/types/job";
 
 export const metadata: Metadata = {
   title: "Đơn ứng tuyển của tôi",
   description: "Theo dõi tiến trình các đơn ứng tuyển trên JobBoard.",
 };
 
+/** Mức hoàn thiện hồ sơ: giới thiệu 30%, kỹ năng (đủ 3 kỹ năng) 40%, khoảng lương 30%. */
+function profileCompleteness(profile: CandidateProfile) {
+  const bio = (profile.bio?.trim().length ?? 0) >= 30 ? 30 : 0;
+  const skills = Math.round(Math.min(profile.skills.length, 3) * (40 / 3));
+  const salary = profile.desiredSalaryMin !== null && profile.desiredSalaryMax !== null ? 30 : 0;
+
+  return bio + skills + salary;
+}
+
 export default async function CandidateApplicationsPage() {
   const session = await requireRole("Candidate", "/ung-vien/don-ung-tuyen");
-  const [applicationHistory, jobs] = await Promise.all([
+  const [applications, profile, recommendations] = await Promise.all([
     getCandidateApplications(session.user.id, session.accessToken),
-    getJobs(),
+    getCandidateProfile(session.user.id, session.accessToken),
+    getRecommendedJobs(session.user.id, session.accessToken, 3).catch(() => []),
   ]);
-  const applications = applicationHistory.flatMap((application) => {
-    const job = jobs.find((item) => item.id === application.jobId);
-    return job ? [{ application, job }] : [];
-  });
-  const recommendations = jobs
-    .filter((job) => !applicationHistory.some((item) => item.jobId === job.id))
-    .slice(0, 3);
+  const completeness = profileCompleteness(profile);
+  const countByStatus = (status: JobApplication["status"]) =>
+    applications.filter((application) => application.status === status).length;
 
   return (
     <>
@@ -41,10 +53,14 @@ export default async function CandidateApplicationsPage() {
               <p>Theo dõi hành trình ứng tuyển và đừng bỏ lỡ cập nhật mới.</p>
             </div>
             <div className="profile-progress">
-              <div className="progress-ring">78%</div>
+              <div className="progress-ring">{completeness}%</div>
               <div>
-                <strong>Hồ sơ khá tốt</strong>
-                <span>Thêm kinh nghiệm để nổi bật hơn</span>
+                <strong>{completeness >= 100 ? "Hồ sơ đã đầy đủ" : "Hồ sơ cần bổ sung"}</strong>
+                <span>
+                  {completeness >= 100
+                    ? "Bạn sẽ nhận được gợi ý việc làm chính xác nhất"
+                    : "Thêm giới thiệu, kỹ năng và mức lương mong muốn"}
+                </span>
               </div>
               <Link className="arrow-link" href="/ung-vien/ho-so">
                 Hoàn thiện hồ sơ <Icon name="arrow" />
@@ -58,38 +74,53 @@ export default async function CandidateApplicationsPage() {
             <div className="dashboard-section-heading">
               <div>
                 <h2>Đơn ứng tuyển của bạn</h2>
-                <p>{applications.length} đơn trong 30 ngày gần nhất</p>
+                <p>{applications.length} đơn đã nộp</p>
               </div>
               <Link className="button button-small" href="/viec-lam">
                 Tìm thêm việc làm
               </Link>
             </div>
 
-            <div className="application-list">
-              {applications.map(({ application, job }) => (
-                <article className="application-card" key={application.id}>
-                  <div className={`company-logo logo-${job.logoTone}`}>{job.logoText}</div>
-                  <div className="application-main">
-                    <div className="application-title-row">
-                      <div>
-                        <Link href={`/viec-lam/${job.id}`}>{job.title}</Link>
-                        <span>{job.company}</span>
+            {applications.length > 0 ? (
+              <div className="application-list">
+                {applications.map((application) => (
+                  <article className="application-card" key={application.id}>
+                    <div className={`company-logo logo-${logoToneFor(application.jobId)}`}>
+                      {getLogoText(application.company)}
+                    </div>
+                    <div className="application-main">
+                      <div className="application-title-row">
+                        <div>
+                          <Link href={`/viec-lam/${application.jobId}`}>{application.jobTitle}</Link>
+                          <span>{application.company}</span>
+                        </div>
+                        <ApplicationStatus status={application.status} />
                       </div>
-                      <ApplicationStatus status={application.status} />
+                      <div className="application-meta">
+                        <span>
+                          <Icon name="location" /> {application.location}
+                        </span>
+                        <span>
+                          <Icon name="clock" /> Ứng tuyển {formatDate(application.appliedAt)}
+                        </span>
+                      </div>
+                      <ApplicationProgress status={application.status} />
                     </div>
-                    <div className="application-meta">
-                      <span>
-                        <Icon name="location" /> {job.location}
-                      </span>
-                      <span>
-                        <Icon name="clock" /> Ứng tuyển {formatDate(application.appliedAt)}
-                      </span>
-                    </div>
-                    <ApplicationProgress status={application.status} />
-                  </div>
-                </article>
-              ))}
-            </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <span className="category-icon">
+                  <Icon name="briefcase" />
+                </span>
+                <h2>Bạn chưa ứng tuyển vị trí nào</h2>
+                <p>Khám phá việc làm phù hợp và gửi đơn đầu tiên của bạn.</p>
+                <Link className="button button-small" href="/viec-lam">
+                  Tìm việc làm
+                </Link>
+              </div>
+            )}
           </section>
 
           <aside className="candidate-sidebar">
@@ -97,20 +128,20 @@ export default async function CandidateApplicationsPage() {
               <span className="section-kicker">Tổng quan</span>
               <div className="candidate-stat-grid">
                 <div>
-                  <strong>3</strong>
+                  <strong>{applications.length}</strong>
                   <span>Đã ứng tuyển</span>
                 </div>
                 <div>
-                  <strong>1</strong>
+                  <strong>{countByStatus("Reviewing")}</strong>
                   <span>Đang xem xét</span>
                 </div>
                 <div>
-                  <strong>14</strong>
-                  <span>Lượt xem hồ sơ</span>
+                  <strong>{countByStatus("Accepted")}</strong>
+                  <span>Được chấp nhận</span>
                 </div>
                 <div>
-                  <strong>8</strong>
-                  <span>Việc đã lưu</span>
+                  <strong>{countByStatus("Rejected")}</strong>
+                  <span>Chưa phù hợp</span>
                 </div>
               </div>
             </div>
@@ -119,7 +150,7 @@ export default async function CandidateApplicationsPage() {
                 <Icon name="sparkle" />
               </span>
               <h3>Tăng cơ hội được chú ý</h3>
-              <p>Nhà tuyển dụng ưu tiên hồ sơ có dự án gần đây và kỹ năng được mô tả rõ.</p>
+              <p>Nhà tuyển dụng ưu tiên hồ sơ có kỹ năng được mô tả rõ và khoảng lương mong muốn hợp lý.</p>
               <Link href="/ung-vien/ho-so">Cập nhật hồ sơ →</Link>
             </div>
           </aside>
@@ -136,11 +167,18 @@ export default async function CandidateApplicationsPage() {
                 Xem tất cả <Icon name="arrow" />
               </Link>
             </div>
-            <div className="featured-grid">
-              {recommendations.map((job) => (
-                <JobCard job={job} key={job.id} />
-              ))}
-            </div>
+            {recommendations.length > 0 ? (
+              <div className="featured-grid">
+                {recommendations.map((job) => (
+                  <JobCard job={job} key={job.id} />
+                ))}
+              </div>
+            ) : (
+              <p className="recommendation-empty">
+                Chưa có gợi ý phù hợp. Thêm kỹ năng và khoảng lương mong muốn vào{" "}
+                <Link href="/ung-vien/ho-so">hồ sơ</Link> để JobBoard tìm việc đúng với bạn.
+              </p>
+            )}
           </div>
         </section>
       </main>

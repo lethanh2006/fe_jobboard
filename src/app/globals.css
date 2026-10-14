@@ -1057,7 +1057,8 @@ a {
   font-size: 15px;
 }
 
-.filter-heading button {
+.filter-heading button,
+.filter-heading a {
   border: 0;
   background: transparent;
   color: var(--green);
@@ -1211,7 +1212,11 @@ a {
   margin-top: 28px;
 }
 
-.pagination button {
+.pagination button,
+.pagination a,
+.pagination > span {
+  display: inline-grid;
+  place-items: center;
   min-width: 36px;
   height: 36px;
   border: 1px solid var(--line);
@@ -1224,15 +1229,23 @@ a {
   cursor: pointer;
 }
 
-.pagination button.active {
+.pagination button.active,
+.pagination a.active {
   border-color: var(--green);
   background: var(--green);
   color: white;
 }
 
-.pagination button:disabled {
+.pagination button:disabled,
+.pagination > span[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.4;
+}
+
+.pagination > span.pagination-gap {
+  border-color: transparent;
+  background: transparent;
+  color: #94a09d;
 }
 
 /* Job detail */
@@ -1632,7 +1645,11 @@ a {
   }
 
   .pagination button:first-child,
-  .pagination button:last-child {
+  .pagination button:last-child,
+  .pagination a:first-child,
+  .pagination a:last-child,
+  .pagination > span:first-child,
+  .pagination > span:last-child {
     display: none;
   }
 }
@@ -3158,4 +3175,65 @@ a {
     width: 100%;
     justify-content: space-between;
   }
+}
+
+/* Huy hiệu độ phù hợp trên thẻ việc làm */
+.job-card-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.match-badge {
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--green-dark);
+  padding: 3px 8px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* Thẻ độ phù hợp ở trang chi tiết tin */
+.match-card {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+  padding: 22px;
+}
+
+.match-card .drawer-match {
+  margin-top: 14px;
+}
+
+.match-card .drawer-skills {
+  margin-top: 14px;
+}
+
+.match-hint {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.match-hint a {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.recommendation-empty {
+  margin: 0;
+  border: 1px dashed #cddbd6;
+  border-radius: 14px;
+  background: white;
+  padding: 26px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.recommendation-empty a {
+  color: var(--green);
+  font-weight: 700;
 }

@@ -3,14 +3,23 @@ import { Icon } from "@/components/icon";
 import { formatSalary } from "@/lib/format";
 import type { Job } from "@/types/job";
 
-export function JobCard({ job }: { job: Job }) {
+export function JobCard({ job, matchScore }: { job: Job; matchScore?: number }) {
+  const score = matchScore ?? job.matchScore;
+
   return (
     <article className="job-card">
       <div className={`company-logo logo-${job.logoTone}`}>{job.logoText}</div>
       <div className="job-card-body">
         <div className="job-card-topline">
           <span>{job.company}</span>
-          {job.featured ? <span className="featured-label">Nổi bật</span> : null}
+          <span className="job-card-badges">
+            {score !== undefined && score > 0 ? (
+              <span className="match-badge" title="Độ phù hợp với hồ sơ của bạn">
+                {score}% phù hợp
+              </span>
+            ) : null}
+            {job.featured ? <span className="featured-label">Nổi bật</span> : null}
+          </span>
         </div>
         <Link className="job-title-link" href={`/viec-lam/${job.id}`}>
           {job.title}

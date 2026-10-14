@@ -23,6 +23,12 @@ export type Job = {
   featured: boolean;
   logoText: string;
   logoTone: "mint" | "navy" | "coral" | "violet" | "sky" | "amber";
+  /** Chỉ có khi tải chi tiết tin: Published (đang tuyển) hoặc Closed (đã đóng). */
+  status?: "Published" | "Closed";
+  /** Chỉ có khi tải chi tiết tin: đã quá hạn nộp hồ sơ. */
+  expired?: boolean;
+  /** Độ phù hợp 0–100 với ứng viên đang đăng nhập (nếu có). */
+  matchScore?: number;
 };
 
 export type JobApplication = {
@@ -90,6 +96,39 @@ export type EmployerJobDetail = EmployerJob &
 export type ApplicantDetail = {
   application: ApplicationView & { matchScore: number };
   candidate: CandidateProfile;
+  matchedSkills: string[];
+  missingSkills: string[];
+  salaryFit: boolean;
+};
+
+export type JobSortOption = "Newest" | "SalaryDescending";
+
+export type JobSearchParams = {
+  keyword?: string;
+  location?: string;
+  category?: string;
+  level?: ApiJobLevel;
+  minimumSalary?: number;
+  featured?: boolean;
+  skills?: string[];
+  sort?: JobSortOption;
+  page?: number;
+  pageSize?: number;
+};
+
+export type JobSearchResult = {
+  items: Job[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
+
+export type CategoryCount = { name: string; count: number };
+
+export type JobMatch = {
+  jobId: number;
+  score: number;
   matchedSkills: string[];
   missingSkills: string[];
   salaryFit: boolean;

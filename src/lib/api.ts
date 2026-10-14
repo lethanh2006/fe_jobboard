@@ -1,18 +1,24 @@
+import { cache } from "react";
 import {
   getJobById as getFallbackJobById,
   jobs as fallbackJobs,
 } from "@/data/jobs";
 import { backendApiUrl } from "@/lib/api-config";
+import { foldText } from "@/lib/text";
 import type {
   ApplicantDetail,
   ApplicationView,
   CandidateProfile,
   EmployerJob,
   EmployerJobDetail,
+  CategoryCount,
   Job,
   JobApplication,
   JobFormInput,
   JobLevel,
+  JobMatch,
+  JobSearchParams,
+  JobSearchResult,
   WorkMode,
 } from "@/types/job";
 
@@ -37,6 +43,9 @@ type ApiJob = {
   deadline: string;
   featured: boolean;
   skills: string[];
+  status?: "Published" | "Closed";
+  expired?: boolean;
+  matchScore?: number;
 };
 
 type PagedResult<T> = {
@@ -91,6 +100,8 @@ const workModeLabels: Record<ApiJob["workMode"], WorkMode> = {
 
 const logoTones: Job["logoTone"][] = ["navy", "coral", "sky", "violet", "mint", "amber"];
 
+export const logoToneFor = (jobId: number) => logoTones[(jobId - 1) % logoTones.length];
+
 function mapJob(job: ApiJob): Job {
   const fallback = getFallbackJobById(job.id);
 
@@ -114,7 +125,10 @@ function mapJob(job: ApiJob): Job {
     deadline: toDateOnly(job.deadline),
     featured: job.featured,
     logoText: getLogoText(job.company),
-    logoTone: logoTones[(job.id - 1) % logoTones.length],
+    logoTone: logoToneFor(job.id),
+    status: job.status,
+    expired: job.expired,
+    matchScore: job.matchScore,
   };
 }
 
@@ -135,7 +149,7 @@ function mapApplication(application: ApiApplication): ApplicationView {
   };
 }
 
-function getLogoText(company: string) {
+export function getLogoText(company: string) {
   const words = company.trim().split(/\s+/);
   return words.length === 1
     ? words[0].slice(0, 2).toUpperCase()
@@ -187,12 +201,135 @@ export async function getJobs(): Promise<Job[]> {
   }
 }
 
-export async function getJobById(id: number): Promise<Job | undefined> {
+/** Được nhớ trong một lần render để `generateMetadata` và trang không gọi API hai lần. */
+export const getJobById = cache(async (id: number): Promise<Job | undefined> => {
   try {
     return mapJob(await request<ApiJob>(`/jobs/${id}`));
-  } catch {
+  } catch (error) {
+    // 404 nghĩa là tin không tồn tại hoặc chưa công khai: không thay bằng dữ liệu mẫu.
+    if (error instanceof ApiError && error.status === 404) {
+      return undefined;
+    }
+
     return getFallbackJobById(id);
   }
+});
+
+/** Tìm tin ở phía server; khi API không khả dụng thì lọc trên dữ liệu mẫu để trang vẫn dùng được. */
+export async function searchJobs(params: JobSearchParams): Promise<JobSearchResult> {
+  const query = new URLSearchParams();
+  const set = (name: string, value: string | number | boolean | undefined) => {
+    if (value !== undefined && value !== "") {
+      query.set(name, String(value));
+    }
+  };
+  set("keyword", params.keyword);
+  set("location", params.location);
+  set("category", params.category);
+  set("level", params.level);
+  set("minimumSalary", params.minimumSalary);
+  set("featured", params.featured);
+  set("sort", params.sort);
+  set("page", params.page);
+  set("pageSize", params.pageSize);
+  params.skills?.forEach((skill) => query.append("skills", skill));
+
+  try {
+    const result = await request<PagedResult<ApiJob>>(`/jobs?${query}`);
+    return { ...result, items: result.items.map(mapJob) };
+  } catch (error) {
+    // Lỗi 4xx là tham số không hợp lệ: hiển thị thay vì che bằng dữ liệu mẫu.
+    if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+      throw error;
+    }
+
+    return searchFallbackJobs(params);
+  }
+}
+
+const apiLevelByLabel: Record<JobLevel, ApiJob["level"]> = {
+  "Thực tập": "Internship",
+  Junior: "Junior",
+  Middle: "Middle",
+  Senior: "Senior",
+  Lead: "Lead",
+};
+
+function searchFallbackJobs(params: JobSearchParams): JobSearchResult {
+  const contains = (text: string, part?: string) =>
+    !part || foldText(text).includes(foldText(part.trim()));
+  const requiredSkills = (params.skills ?? []).map((skill) => foldText(skill.trim()));
+
+  const matches = fallbackJobs
+    .filter(
+      (job) =>
+        (contains(job.title, params.keyword) ||
+          contains(job.company, params.keyword) ||
+          job.skills.some((skill) => contains(skill, params.keyword))) &&
+        contains(job.location, params.location) &&
+        contains(job.category, params.category) &&
+        (!params.level || apiLevelByLabel[job.level] === params.level) &&
+        (params.minimumSalary === undefined || job.salaryMin >= params.minimumSalary) &&
+        (params.featured === undefined || job.featured === params.featured) &&
+        requiredSkills.every((required) =>
+          job.skills.some((skill) => foldText(skill) === required),
+        ),
+    )
+    .sort((first, second) =>
+      params.sort === "SalaryDescending"
+        ? second.salaryMax - first.salaryMax || first.id - second.id
+        : second.postedAt.localeCompare(first.postedAt) || first.id - second.id,
+    );
+
+  const pageSize = params.pageSize ?? 20;
+  const page = params.page ?? 1;
+
+  return {
+    items: matches.slice((page - 1) * pageSize, page * pageSize),
+    page,
+    pageSize,
+    totalItems: matches.length,
+    totalPages: Math.ceil(matches.length / pageSize),
+  };
+}
+
+export async function getCategories(): Promise<CategoryCount[]> {
+  try {
+    return await request<CategoryCount[]>("/jobs/categories");
+  } catch {
+    const counts = new Map<string, number>();
+    fallbackJobs.forEach((job) => counts.set(job.category, (counts.get(job.category) ?? 0) + 1));
+    return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  }
+}
+
+export async function getJobMatches(
+  candidateId: number,
+  jobIds: number[],
+  accessToken: string,
+): Promise<JobMatch[]> {
+  if (jobIds.length === 0) {
+    return [];
+  }
+
+  return request<JobMatch[]>(
+    `/candidates/${candidateId}/job-matches?jobIds=${jobIds.slice(0, 50).join(",")}`,
+    undefined,
+    accessToken,
+  );
+}
+
+export async function getRecommendedJobs(
+  candidateId: number,
+  accessToken: string,
+  limit = 6,
+): Promise<Job[]> {
+  const result = await request<ApiJob[]>(
+    `/candidates/${candidateId}/recommended-jobs?limit=${limit}`,
+    undefined,
+    accessToken,
+  );
+  return result.map(mapJob);
 }
 
 export async function applyToJob(jobId: number) {

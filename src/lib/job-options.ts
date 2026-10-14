@@ -59,3 +59,15 @@ export const suggestedSkills = [
 
 export const MAX_JOB_SKILLS = 15;
 export const MAX_CANDIDATE_SKILLS = 30;
+
+/** Biểu tượng cho thẻ lĩnh vực dựa trên tên lĩnh vực. */
+export function categoryIcon(name: string): "code" | "chart" | "pen" | "cloud" | "briefcase" {
+  const text = name.toLowerCase();
+
+  if (/dữ liệu|data/.test(text)) return "chart";
+  if (/thiết kế|design/.test(text)) return "pen";
+  if (/devops|cloud/.test(text)) return "cloud";
+  if (/lập trình|phần mềm|kiểm thử|code/.test(text)) return "code";
+
+  return "briefcase";
+}
