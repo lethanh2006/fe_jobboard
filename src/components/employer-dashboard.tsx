@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { ApplicantDrawer } from "@/components/applicant-drawer";
 import { EmployerJobForm } from "@/components/employer-job-form";
 import { Icon } from "@/components/icon";
@@ -149,7 +150,12 @@ export function EmployerDashboard({
         <div>
           <span className="section-kicker">{companyName}</span>
           <h1>Chào buổi sáng, {employerName}</h1>
-          <p>Đây là tình hình tuyển dụng của đội ngũ trong tuần này.</p>
+          <p>
+            Đây là tình hình tuyển dụng của đội ngũ.{" "}
+            <Link className="inline-link" href="/nha-tuyen-dung/cong-ty">
+              Chỉnh sửa hồ sơ công ty →
+            </Link>
+          </p>
         </div>
         <button
           className="button"

@@ -5,9 +5,12 @@ import { isTrustedMutation } from "@/lib/request-security";
 import type { LoginResponse } from "@/types/auth";
 
 type RegistrationPayload = {
+  role?: "candidate" | "employer";
   name?: string;
   email?: string;
   password?: string;
+  companyName?: string;
+  companyLocation?: string;
 };
 
 export async function POST(request: Request) {
@@ -29,15 +32,27 @@ export async function POST(request: Request) {
   }
 
   try {
-    const backendResponse = await fetch(`${backendApiUrl}/auth/register/candidate`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+    // Chỉ chuyển tiếp đúng các trường cần thiết, không đẩy nguyên payload của client.
+    const isEmployer = payload.role === "employer";
+    const backendResponse = await fetch(
+      `${backendApiUrl}/auth/register/${isEmployer ? "employer" : "candidate"}`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: payload.name,
+          email: payload.email,
+          password: payload.password,
+          ...(isEmployer
+            ? { companyName: payload.companyName, companyLocation: payload.companyLocation }
+            : {}),
+        }),
+        cache: "no-store",
       },
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    });
+    );
 
     if (!backendResponse.ok) {
       return new NextResponse(await backendResponse.text(), {

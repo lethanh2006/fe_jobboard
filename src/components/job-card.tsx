@@ -11,7 +11,9 @@ export function JobCard({ job, matchScore }: { job: Job; matchScore?: number }) 
       <div className={`company-logo logo-${job.logoTone}`}>{job.logoText}</div>
       <div className="job-card-body">
         <div className="job-card-topline">
-          <span>{job.company}</span>
+          <Link className="job-company-link" href={`/cong-ty/${job.companyId}`}>
+            {job.company}
+          </Link>
           <span className="job-card-badges">
             {score !== undefined && score > 0 ? (
               <span className="match-badge" title="Độ phù hợp với hồ sơ của bạn">

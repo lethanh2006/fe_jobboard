@@ -58,6 +58,10 @@ npm run build
   thái đơn.
 - Trang đăng nhập gọi API JWT thật, hỗ trợ redirect an toàn, refresh token xoay
   vòng, cookie `HttpOnly` và đăng xuất có thu hồi phiên phía server.
+- Trang `/dang-ky/nha-tuyen-dung` tạo công ty cùng tài khoản nhà tuyển dụng; trang
+  `/nha-tuyen-dung/cong-ty` sửa hồ sơ công ty (đổi tên sẽ làm mới phiên đăng nhập)
+  và `/cong-ty/[id]` là trang công khai liệt kê các vị trí đang tuyển. Menu đầu trang
+  hiển thị theo vai trò.
 - Trang `/dang-ky` tạo tài khoản ứng viên thật, kiểm tra xác nhận mật khẩu, tự
   đăng nhập và chuyển thẳng tới hồ sơ mới sau khi đăng ký thành công.
 - Trang `/tai-khoan/doi-mat-khau` xác minh mật khẩu hiện tại, áp dụng chính sách

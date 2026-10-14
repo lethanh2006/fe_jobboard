@@ -12,6 +12,7 @@ import type {
   EmployerJob,
   EmployerJobDetail,
   CategoryCount,
+  CompanyProfile,
   Job,
   JobApplication,
   JobFormInput,
@@ -229,6 +230,7 @@ export async function searchJobs(params: JobSearchParams): Promise<JobSearchResu
   set("level", params.level);
   set("minimumSalary", params.minimumSalary);
   set("featured", params.featured);
+  set("companyId", params.companyId);
   set("sort", params.sort);
   set("page", params.page);
   set("pageSize", params.pageSize);
@@ -271,6 +273,7 @@ function searchFallbackJobs(params: JobSearchParams): JobSearchResult {
         (!params.level || apiLevelByLabel[job.level] === params.level) &&
         (params.minimumSalary === undefined || job.salaryMin >= params.minimumSalary) &&
         (params.featured === undefined || job.featured === params.featured) &&
+        (params.companyId === undefined || job.companyId === params.companyId) &&
         requiredSkills.every((required) =>
           job.skills.some((skill) => foldText(skill) === required),
         ),
@@ -477,6 +480,36 @@ export async function updateCandidateProfile(
   profile: Omit<CandidateProfile, "id" | "name">,
 ) {
   return request<CandidateProfile>(`/candidates/${candidateId}/profile`, {
+    method: "PUT",
+    body: JSON.stringify(profile),
+  });
+}
+
+/** Hồ sơ công khai của công ty; `undefined` khi không tồn tại hoặc công ty bị khóa. */
+export const getCompany = cache(async (id: number): Promise<CompanyProfile | undefined> => {
+  try {
+    return await request<CompanyProfile>(`/companies/${id}`);
+  } catch (error) {
+    if (error instanceof ApiError && (error.status === 404 || error.status === 400)) {
+      return undefined;
+    }
+
+    throw error;
+  }
+});
+
+export async function getOwnCompany(
+  companyId: number,
+  accessToken: string,
+): Promise<CompanyProfile> {
+  return request<CompanyProfile>(`/employers/${companyId}/company`, undefined, accessToken);
+}
+
+export async function updateCompany(
+  companyId: number,
+  profile: Pick<CompanyProfile, "name" | "location" | "website" | "description">,
+) {
+  return request<CompanyProfile>(`/employers/${companyId}/company`, {
     method: "PUT",
     body: JSON.stringify(profile),
   });

@@ -110,6 +110,7 @@ export type JobSearchParams = {
   level?: ApiJobLevel;
   minimumSalary?: number;
   featured?: boolean;
+  companyId?: number;
   skills?: string[];
   sort?: JobSortOption;
   page?: number;
@@ -132,4 +133,13 @@ export type JobMatch = {
   matchedSkills: string[];
   missingSkills: string[];
   salaryFit: boolean;
+};
+
+export type CompanyProfile = {
+  id: number;
+  name: string;
+  location: string | null;
+  website: string | null;
+  description: string | null;
+  status: "Active" | "Suspended";
 };

@@ -1,10 +1,46 @@
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { getSession } from "@/lib/server-auth";
-import type { AuthUser } from "@/types/auth";
+import type { AuthUser, UserRole } from "@/types/auth";
+
+type NavItem = { href: string; label: string };
+
+/** Menu chính theo vai trò: mỗi người chỉ thấy các mục dùng được cho mình. */
+function navigationFor(role?: UserRole): NavItem[] {
+  const jobs = { href: "/viec-lam", label: "Việc làm" };
+
+  switch (role) {
+    case "Candidate":
+      return [jobs, { href: "/ung-vien/don-ung-tuyen", label: "Đơn ứng tuyển" }];
+    case "Employer":
+      return [
+        jobs,
+        { href: "/nha-tuyen-dung", label: "Tin tuyển dụng" },
+        { href: "/nha-tuyen-dung/cong-ty", label: "Hồ sơ công ty" },
+      ];
+    case "Admin":
+      return [jobs];
+    default:
+      return [jobs, { href: "/dang-ky/nha-tuyen-dung", label: "Dành cho nhà tuyển dụng" }];
+  }
+}
+
+function primaryActionFor(user: AuthUser | null) {
+  if (!user) {
+    return { href: "/dang-ky", label: "Đăng ký" };
+  }
+
+  return user.role === "Candidate"
+    ? { href: "/ung-vien/ho-so", label: "Hồ sơ của tôi" }
+    : user.role === "Employer"
+      ? { href: "/nha-tuyen-dung", label: "Đăng tuyển" }
+      : { href: "/viec-lam", label: "Xem việc làm" };
+}
 
 export async function SiteHeader({ user }: { user?: AuthUser | null }) {
   const currentUser = user === undefined ? (await getSession())?.user ?? null : user;
+  const navigation = navigationFor(currentUser?.role);
+  const primaryAction = primaryActionFor(currentUser);
 
   return (
     <header className="site-header">
@@ -17,9 +53,11 @@ export async function SiteHeader({ user }: { user?: AuthUser | null }) {
         </Link>
 
         <nav className="main-nav" aria-label="Điều hướng chính">
-          <Link href="/viec-lam">Việc làm</Link>
-          <Link href="/ung-vien/don-ung-tuyen">Đơn ứng tuyển</Link>
-          <Link href="/nha-tuyen-dung">Nhà tuyển dụng</Link>
+          {navigation.map((item) => (
+            <Link href={item.href} key={item.href}>
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         <div className="header-actions">
@@ -41,11 +79,8 @@ export async function SiteHeader({ user }: { user?: AuthUser | null }) {
               Đăng nhập
             </Link>
           )}
-          <Link
-            className="button button-small"
-            href={currentUser?.role === "Candidate" ? "/ung-vien/ho-so" : "/nha-tuyen-dung"}
-          >
-            {currentUser?.role === "Candidate" ? "Hồ sơ của tôi" : "Đăng tuyển"}
+          <Link className="button button-small" href={primaryAction.href}>
+            {primaryAction.label}
           </Link>
         </div>
 
@@ -54,9 +89,11 @@ export async function SiteHeader({ user }: { user?: AuthUser | null }) {
             <Icon name="menu" />
           </summary>
           <nav aria-label="Điều hướng di động">
-            <Link href="/viec-lam">Việc làm</Link>
-            <Link href="/ung-vien/don-ung-tuyen">Đơn ứng tuyển</Link>
-            <Link href="/nha-tuyen-dung">Nhà tuyển dụng</Link>
+            {navigation.map((item) => (
+              <Link href={item.href} key={item.href}>
+                {item.label}
+              </Link>
+            ))}
             {currentUser ? (
               <>
                 <Link href="/tai-khoan/doi-mat-khau">Bảo mật tài khoản</Link>
@@ -65,7 +102,10 @@ export async function SiteHeader({ user }: { user?: AuthUser | null }) {
                 </form>
               </>
             ) : (
-              <Link href="/dang-nhap">Đăng nhập</Link>
+              <>
+                <Link href="/dang-nhap">Đăng nhập</Link>
+                <Link href="/dang-ky">Đăng ký</Link>
+              </>
             )}
           </nav>
         </details>

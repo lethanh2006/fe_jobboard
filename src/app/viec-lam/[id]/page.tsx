@@ -10,6 +10,7 @@ import { SiteHeader } from "@/components/site-header";
 import { jobs as fallbackJobs } from "@/data/jobs";
 import {
   getCandidateApplications,
+  getCompany,
   getJobById,
   getJobMatches,
   searchJobs,
@@ -50,7 +51,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
   const session = await getSession();
   const candidate = session?.user.role === "Candidate" ? session : null;
-  const [sameCategory, newest, match, applications] = await Promise.all([
+  const [company, sameCategory, newest, match, applications] = await Promise.all([
+    getCompany(job.companyId).catch(() => undefined),
     searchJobs({ category: job.category, pageSize: 4 }).catch(() => null),
     searchJobs({ pageSize: 6 }).catch(() => null),
     candidate
@@ -190,17 +192,23 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
             {match ? <JobMatchCard match={match} /> : null}
 
             <div className="company-summary-card">
-              <div className={`company-logo logo-${job.logoTone}`}>
-                {job.logoText}
-              </div>
+              <div className={`company-logo logo-${job.logoTone}`}>{job.logoText}</div>
               <div>
-                <strong>{job.company}</strong>
-                <span>Nhà tuyển dụng đã xác minh</span>
+                <strong>
+                  <Link href={`/cong-ty/${job.companyId}`}>{job.company}</Link>
+                </strong>
+                <span>{company?.location ?? job.location}</span>
               </div>
               <p>
-                Đội ngũ đề cao sự chủ động, học hỏi liên tục và những sản phẩm
-                tạo ra giá trị thực cho người dùng.
+                {company?.description
+                  ? company.description.length > 220
+                    ? `${company.description.slice(0, 220).trimEnd()}…`
+                    : company.description
+                  : "Công ty chưa cập nhật phần giới thiệu."}
               </p>
+              <Link className="arrow-link company-card-link" href={`/cong-ty/${job.companyId}`}>
+                Xem trang công ty <Icon name="arrow" />
+              </Link>
             </div>
           </aside>
         </div>

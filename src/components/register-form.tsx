@@ -5,8 +5,34 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { AuthUser } from "@/types/auth";
 
-export function RegisterForm() {
+type RegisterRole = "candidate" | "employer";
+
+const copy = {
+  candidate: {
+    kicker: "Bắt đầu cùng JobBoard",
+    title: "Tạo tài khoản ứng viên",
+    description: "Tạo hồ sơ, ứng tuyển và theo dõi cơ hội phù hợp trong một nơi.",
+    nameLabel: "Họ và tên",
+    submit: "Tạo tài khoản",
+    destination: "/ung-vien/ho-so",
+    switchText: "Bạn là nhà tuyển dụng?",
+    switchLink: { href: "/dang-ky/nha-tuyen-dung", label: "Đăng ký tuyển dụng" },
+  },
+  employer: {
+    kicker: "Dành cho nhà tuyển dụng",
+    title: "Đăng ký nhà tuyển dụng",
+    description: "Tạo trang công ty, đăng tin và nhận hồ sơ phù hợp chỉ trong vài phút.",
+    nameLabel: "Họ và tên người quản lý",
+    submit: "Tạo tài khoản tuyển dụng",
+    destination: "/nha-tuyen-dung",
+    switchText: "Bạn đang tìm việc?",
+    switchLink: { href: "/dang-ky", label: "Đăng ký ứng viên" },
+  },
+} as const;
+
+export function RegisterForm({ role = "candidate" }: { role?: RegisterRole }) {
   const router = useRouter();
+  const text = copy[role];
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -14,6 +40,7 @@ export function RegisterForm() {
     event.preventDefault();
     setMessage("");
     const form = new FormData(event.currentTarget);
+    const field = (name: string) => String(form.get(name) ?? "").trim();
     const password = String(form.get("password") ?? "");
     const confirmation = String(form.get("confirmation") ?? "");
 
@@ -28,9 +55,13 @@ export function RegisterForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: String(form.get("name") ?? ""),
-          email: String(form.get("email") ?? ""),
+          role,
+          name: field("name"),
+          email: field("email"),
           password,
+          ...(role === "employer"
+            ? { companyName: field("companyName"), companyLocation: field("companyLocation") }
+            : {}),
         }),
       });
       const body = (await response.json().catch(() => ({}))) as {
@@ -43,7 +74,7 @@ export function RegisterForm() {
         throw new Error(body.detail ?? body.title ?? "Không thể tạo tài khoản.");
       }
 
-      router.push("/ung-vien/ho-so");
+      router.push(text.destination);
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không thể tạo tài khoản.");
@@ -54,18 +85,32 @@ export function RegisterForm() {
   return (
     <form className="login-form" onSubmit={handleSubmit}>
       <div className="login-heading">
-        <span className="section-kicker">Bắt đầu cùng JobBoard</span>
-        <h1>Tạo tài khoản ứng viên</h1>
-        <p>Tạo hồ sơ, ứng tuyển và theo dõi cơ hội phù hợp trong một nơi.</p>
+        <span className="section-kicker">{text.kicker}</span>
+        <h1>{text.title}</h1>
+        <p>{text.description}</p>
       </div>
 
+      {role === "employer" ? (
+        <>
+          <label className="form-field">
+            <span>Tên công ty</span>
+            <input name="companyName" required maxLength={200} autoComplete="organization" />
+          </label>
+          <label className="form-field">
+            <span>
+              Địa điểm <em className="field-hint">(không bắt buộc)</em>
+            </span>
+            <input name="companyLocation" maxLength={200} placeholder="Ví dụ: TP. Hồ Chí Minh" />
+          </label>
+        </>
+      ) : null}
       <label className="form-field">
-        <span>Họ và tên</span>
+        <span>{text.nameLabel}</span>
         <input name="name" required minLength={2} maxLength={160} autoComplete="name" />
       </label>
       <label className="form-field">
         <span>Email</span>
-        <input name="email" type="email" required autoComplete="email" />
+        <input name="email" type="email" required maxLength={320} autoComplete="email" />
       </label>
       <label className="form-field">
         <span>Mật khẩu</span>
@@ -74,6 +119,7 @@ export function RegisterForm() {
           type="password"
           required
           minLength={10}
+          maxLength={128}
           autoComplete="new-password"
         />
         <small>Ít nhất 10 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt.</small>
@@ -85,6 +131,7 @@ export function RegisterForm() {
           type="password"
           required
           minLength={10}
+          maxLength={128}
           autoComplete="new-password"
         />
       </label>
@@ -94,13 +141,15 @@ export function RegisterForm() {
       </label>
 
       <button className="button full-button" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+        {isSubmitting ? "Đang tạo tài khoản..." : text.submit}
       </button>
 
       {message ? <p className="integration-message" role="alert">{message}</p> : null}
 
       <p className="signup-note">
         Đã có tài khoản? <Link href="/dang-nhap">Đăng nhập</Link>
+        <br />
+        {text.switchText} <Link href={text.switchLink.href}>{text.switchLink.label}</Link>
       </p>
     </form>
   );
