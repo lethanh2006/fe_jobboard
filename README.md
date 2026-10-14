@@ -84,6 +84,11 @@ npm run build
   đăng nhập và chuyển thẳng tới hồ sơ mới sau khi đăng ký thành công.
 - Trang `/tai-khoan/doi-mat-khau` xác minh mật khẩu hiện tại, áp dụng chính sách
   mật khẩu mạnh, thu hồi các phiên cũ và yêu cầu đăng nhập lại sau khi đổi.
+- Quên mật khẩu: `/quen-mat-khau` nhận email và luôn báo "đã gửi" dù email có đăng ký hay không (BE không
+  tiết lộ tài khoản nào tồn tại), có nút gửi lại sau 60 giây. Liên kết trong email mở `/dat-lai-mat-khau?token=...`
+  để chọn mật khẩu mới; liên kết sai, đã dùng hoặc hết hạn hiện màn hình "đã hết hiệu lực" kèm đường yêu cầu liên
+  kết mới. Trang đặt lại đặt `referrer: no-referrer` và `noindex` vì token nằm trên URL; thành công thì xóa cookie phiên
+  cũ và chuyển về đăng nhập. Khi chạy local với `EMAIL_PROVIDER=Log`, liên kết được in trong log của BE.
 - Component dùng chung cho header, footer, thẻ việc làm và icon.
 - API client tập trung tại `src/lib/api.ts`, chịu trách nhiệm mapping enum và
   contract C# sang model hiển thị TypeScript. `src/lib/server-auth.ts` bảo vệ

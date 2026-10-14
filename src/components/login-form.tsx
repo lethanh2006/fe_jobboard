@@ -10,9 +10,11 @@ import type { AuthUser } from "@/types/auth";
 export function LoginForm({
   redirectTo,
   passwordChanged = false,
+  passwordReset = false,
 }: {
   redirectTo?: string;
   passwordChanged?: boolean;
+  passwordReset?: boolean;
 }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
@@ -79,6 +81,13 @@ export function LoginForm({
         </div>
       ) : null}
 
+      {passwordReset ? (
+        <div className="login-notice">
+          <Icon name="check" />
+          Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.
+        </div>
+      ) : null}
+
       <label className="form-field">
         <span>Email</span>
         <input name="email" type="email" required placeholder="candidate@jobboard.vn" />
@@ -92,7 +101,7 @@ export function LoginForm({
         <label>
           <input name="remember" type="checkbox" /> Ghi nhớ đăng nhập
         </label>
-        <Link href="/dang-nhap">Quên mật khẩu?</Link>
+        <Link href="/quen-mat-khau">Quên mật khẩu?</Link>
       </div>
 
       <button className="button full-button" type="submit" disabled={isSubmitting}>

@@ -3882,3 +3882,38 @@ a.notification-title:hover { color: var(--green); text-decoration: underline; }
     flex-direction: column;
   }
 }
+
+/* Quên mật khẩu / đặt lại mật khẩu */
+.recovery-email {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.recovery-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+  font-size: 10px;
+}
+
+.recovery-actions a,
+.recovery-actions .text-button {
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.recovery-actions a:hover,
+.recovery-actions .text-button:hover {
+  text-decoration: underline;
+}
+
+.login-form .form-field small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
