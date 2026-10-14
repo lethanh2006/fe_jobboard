@@ -49,6 +49,9 @@ npm run build
 - Trang `/viec-lam/[id]` hiển thị mô tả, yêu cầu, quyền lợi, tổng quan, việc
   tương tự, độ phù hợp (kỹ năng khớp/thiếu) của ứng viên, trạng thái đã đóng/hết
   hạn/đã ứng tuyển và gửi đơn ứng tuyển thật tới backend.
+- Ứng viên lưu/bỏ lưu việc làm ngay trên thẻ ở danh sách và trang chi tiết (khách được dẫn tới đăng nhập
+  rồi quay lại); trang `/ung-vien/viec-lam-da-luu` liệt kê tin đã lưu, báo rõ tin đã đóng/hết hạn/không còn
+  công khai và luôn cho bỏ lưu. Trạng thái lưu của cả trang kết quả lấy bằng một request.
 - Không gian ứng viên được bảo vệ theo role: lịch sử/trạng thái ứng tuyển, mức
   hoàn thiện hồ sơ, gợi ý việc làm theo độ phù hợp, và cập nhật hồ sơ, kỹ năng
   (nhập tự do), khoảng lương mong muốn qua API.

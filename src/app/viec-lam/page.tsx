@@ -4,9 +4,10 @@ import { Icon } from "@/components/icon";
 import { JobCard } from "@/components/job-card";
 import { JobPagination } from "@/components/job-pagination";
 import { JobSearchForm } from "@/components/job-search-form";
+import { SaveJobButton } from "@/components/save-job-button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getCategories, getJobMatches, searchJobs } from "@/lib/api";
+import { getCategories, getJobMatches, getSavedJobIds, searchJobs } from "@/lib/api";
 import {
   buildJobsHref,
   categoryOptions,
@@ -32,15 +33,19 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
     searchJobs(toSearchParams(filters)).catch(() => null),
   ]);
 
-  // Ứng viên đăng nhập thấy độ phù hợp trên từng thẻ; lỗi ở phần này không làm hỏng danh sách.
-  const matches =
-    session?.user.role === "Candidate" && result
-      ? await getJobMatches(
-          session.user.id,
-          result.items.map((job) => job.id),
-          session.accessToken,
-        ).catch(() => [])
-      : [];
+  // Ứng viên đăng nhập thấy độ phù hợp và trạng thái lưu trên từng thẻ; mỗi phần một request cho
+  // cả trang kết quả, và lỗi ở các phần phụ này không làm hỏng danh sách.
+  const candidate = session?.user.role === "Candidate" ? session : null;
+  const jobIds = result?.items.map((job) => job.id) ?? [];
+  const [matches, savedIds] = await Promise.all([
+    candidate && result
+      ? getJobMatches(candidate.user.id, jobIds, candidate.accessToken).catch(() => [])
+      : [],
+    candidate && result
+      ? getSavedJobIds(jobIds, candidate.accessToken).catch(() => null)
+      : ([] as number[]),
+  ]);
+  const returnPath = buildJobsHref(filters);
   const scoreByJob = new Map(matches.map((match) => [match.jobId, match.score]));
 
   return (
@@ -70,7 +75,23 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
               <>
                 <div className="job-result-list">
                   {result.items.map((job) => (
-                    <JobCard job={job} matchScore={scoreByJob.get(job.id)} key={job.id} />
+                    <JobCard
+                      job={job}
+                      matchScore={scoreByJob.get(job.id)}
+                      key={job.id}
+                      saveControl={
+                        !session || candidate ? (
+                          <SaveJobButton
+                            // Gắn lại khi dữ liệu server đổi (sau router.refresh) để trạng thái luôn khớp.
+                            key={`${job.id}-${savedIds?.includes(job.id)}`}
+                            jobId={job.id}
+                            initialSaved={savedIds === null ? null : savedIds.includes(job.id)}
+                            guest={!session}
+                            returnPath={returnPath}
+                          />
+                        ) : undefined
+                      }
+                    />
                   ))}
                 </div>
                 <JobPagination filters={filters} totalPages={result.totalPages} />

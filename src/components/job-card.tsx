@@ -1,9 +1,17 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Icon } from "@/components/icon";
 import { formatSalary } from "@/lib/format";
 import type { Job } from "@/types/job";
 
-export function JobCard({ job, matchScore }: { job: Job; matchScore?: number }) {
+type JobCardProps = {
+  job: Job;
+  matchScore?: number;
+  /** Nút lưu việc làm do trang quyết định có hiển thị hay không (ví dụ không hiện cho nhà tuyển dụng). */
+  saveControl?: ReactNode;
+};
+
+export function JobCard({ job, matchScore, saveControl }: JobCardProps) {
   const score = matchScore ?? job.matchScore;
 
   return (
@@ -44,6 +52,7 @@ export function JobCard({ job, matchScore }: { job: Job; matchScore?: number }) 
           </div>
           <strong className="salary">{formatSalary(job.salaryMin, job.salaryMax)}</strong>
         </div>
+        {saveControl ? <div className="job-card-save">{saveControl}</div> : null}
       </div>
     </article>
   );

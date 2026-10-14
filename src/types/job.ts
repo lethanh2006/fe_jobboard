@@ -127,6 +127,21 @@ export type JobSearchResult = {
   totalPages: number;
 };
 
+export type SavedJob = {
+  jobId: number;
+  savedAt: string;
+  availability: "Open" | "Closed" | "Expired" | "Unavailable";
+  job: Job | null;
+};
+
+export type SavedJobsPage = {
+  items: SavedJob[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
+
 export type CategoryCount = { name: string; count: number };
 
 export type JobMatch = {

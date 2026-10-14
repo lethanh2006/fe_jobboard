@@ -5,6 +5,7 @@ import { ApplyButton } from "@/components/apply-button";
 import { Icon } from "@/components/icon";
 import { JobCard } from "@/components/job-card";
 import { JobMatchCard } from "@/components/job-match-card";
+import { SaveJobButton } from "@/components/save-job-button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { jobs as fallbackJobs } from "@/data/jobs";
@@ -13,6 +14,7 @@ import {
   getCompany,
   getJobById,
   getJobMatches,
+  getSavedJobIds,
   searchJobs,
 } from "@/lib/api";
 import { formatDate, formatSalary } from "@/lib/format";
@@ -51,7 +53,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
   const session = await getSession();
   const candidate = session?.user.role === "Candidate" ? session : null;
-  const [company, sameCategory, newest, match, applications] = await Promise.all([
+  const [company, sameCategory, newest, match, applications, savedIds] = await Promise.all([
     getCompany(job.companyId).catch(() => undefined),
     searchJobs({ category: job.category, pageSize: 4 }).catch(() => null),
     searchJobs({ pageSize: 6 }).catch(() => null),
@@ -66,6 +68,9 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           candidate.accessToken,
         ).catch(() => [])
       : [],
+    candidate
+      ? getSavedJobIds([job.id], candidate.accessToken).catch(() => null)
+      : ([] as number[]),
   ]);
   // Ưu tiên cùng lĩnh vực, thiếu thì bổ sung tin mới nhất để mục này không bị trống.
   const relatedJobs = [...(sameCategory?.items ?? []), ...(newest?.items ?? [])]
@@ -184,6 +189,16 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 alreadyApplied={alreadyApplied}
                 unavailableReason={unavailableReason}
               />
+              {!session || candidate ? (
+                <SaveJobButton
+                  key={`${job.id}-${savedIds?.includes(job.id)}`}
+                  jobId={job.id}
+                  initialSaved={savedIds === null ? null : savedIds.includes(job.id)}
+                  guest={!session}
+                  available={job.status !== "Closed" && !job.expired}
+                  returnPath={`/viec-lam/${job.id}`}
+                />
+              ) : null}
               <p className="safe-note">
                 Hồ sơ của bạn chỉ được gửi khi bạn xác nhận.
               </p>

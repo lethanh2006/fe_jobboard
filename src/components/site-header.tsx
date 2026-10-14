@@ -12,7 +12,11 @@ function navigationFor(role?: UserRole): NavItem[] {
 
   switch (role) {
     case "Candidate":
-      return [jobs, { href: "/ung-vien/don-ung-tuyen", label: "Đơn ứng tuyển" }];
+      return [
+        jobs,
+        { href: "/ung-vien/don-ung-tuyen", label: "Đơn ứng tuyển" },
+        { href: "/ung-vien/viec-lam-da-luu", label: "Việc làm đã lưu" },
+      ];
     case "Employer":
       return [
         jobs,

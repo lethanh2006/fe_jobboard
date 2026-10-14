@@ -20,6 +20,8 @@ import type {
   JobMatch,
   JobSearchParams,
   JobSearchResult,
+  SavedJob,
+  SavedJobsPage,
   WorkMode,
 } from "@/types/job";
 
@@ -192,6 +194,36 @@ export async function request<T>(
 
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
+}
+
+export async function getSavedJobs(page: number, accessToken: string): Promise<SavedJobsPage> {
+  const result = await request<PagedResult<Omit<SavedJob, "job"> & { job: ApiJob | null }>>(
+    `/saved-jobs?page=${page}&pageSize=20`,
+    undefined,
+    accessToken,
+  );
+
+  return {
+    ...result,
+    items: result.items.map((item) => ({ ...item, job: item.job ? mapJob(item.job) : null })),
+  };
+}
+
+/** Một request cho cả trang kết quả, không gọi riêng cho từng thẻ việc làm. */
+export function getSavedJobIds(jobIds: number[], accessToken?: string): Promise<number[]> {
+  if (jobIds.length === 0) {
+    return Promise.resolve([]);
+  }
+
+  return request<number[]>(
+    `/saved-jobs/ids?jobIds=${[...new Set(jobIds)].join(",")}`,
+    undefined,
+    accessToken,
+  );
+}
+
+export function setJobSaved(jobId: number, saved: boolean) {
+  return request<void>(`/saved-jobs/${jobId}`, { method: saved ? "PUT" : "DELETE" });
 }
 
 export async function getJobs(): Promise<Job[]> {
