@@ -3679,3 +3679,206 @@ a.notification-title:hover { color: var(--green); text-decoration: underline; }
     padding: 20px;
   }
 }
+
+/* CV của ứng viên */
+.cv-card {
+  margin-top: 22px;
+}
+
+.cv-heading h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.cv-heading p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.cv-file {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fafcfb;
+  padding: 14px 16px;
+}
+
+.cv-file-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--mint);
+  color: var(--green-dark);
+}
+
+.cv-file-icon svg {
+  width: 18px;
+}
+
+.cv-file-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.cv-file-info a {
+  display: block;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cv-file-info a:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.cv-file-info span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.cv-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+}
+
+.cv-actions .text-button {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.cv-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 20px;
+  border: 1px dashed #cddbd6;
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.cv-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.cv-message {
+  margin: 14px 0 0;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.cv-card .form-error {
+  margin-top: 14px;
+}
+
+.cv-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.cv-note svg {
+  width: 14px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--green);
+}
+
+.cv-note a {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.drawer-cv {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fafcfb;
+  padding: 12px 14px;
+  color: var(--ink);
+}
+
+.drawer-cv:hover {
+  border-color: #97c7b5;
+  background: var(--mint);
+}
+
+.drawer-cv svg {
+  width: 18px;
+  flex: none;
+  color: var(--green-dark);
+}
+
+.drawer-cv strong,
+.drawer-cv small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.drawer-cv strong {
+  font-size: 12px;
+}
+
+.drawer-cv small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.applicant-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cv-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--green-dark);
+  padding: 2px 7px;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.cv-chip svg {
+  width: 9px;
+}
+
+@media (max-width: 680px) {
+  .cv-file,
+  .cv-empty {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

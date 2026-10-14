@@ -357,7 +357,14 @@ export function EmployerDashboard({
                               <button className="candidate-name-button" type="button" onClick={() => setOpenApplicationId(application.id)}>
                                 {application.candidateName}
                               </button>
-                              <span>Xem hồ sơ</span>
+                              <span className="applicant-hint">
+                                Xem hồ sơ
+                                {application.cvAttached ? (
+                                  <span className="cv-chip" title="Ứng viên có đính kèm CV">
+                                    <Icon name="paperclip" /> CV
+                                  </span>
+                                ) : null}
+                              </span>
                             </div>
                           </div>
                         </td>

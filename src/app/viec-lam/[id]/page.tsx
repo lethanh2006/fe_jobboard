@@ -11,6 +11,7 @@ import { SiteHeader } from "@/components/site-header";
 import { jobs as fallbackJobs } from "@/data/jobs";
 import {
   getCandidateApplications,
+  getCandidateProfile,
   getCompany,
   getJobById,
   getJobMatches,
@@ -53,7 +54,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
   const session = await getSession();
   const candidate = session?.user.role === "Candidate" ? session : null;
-  const [company, sameCategory, newest, match, applications, savedIds] = await Promise.all([
+  const [company, sameCategory, newest, match, applications, savedIds, profile] = await Promise.all([
     getCompany(job.companyId).catch(() => undefined),
     searchJobs({ category: job.category, pageSize: 4 }).catch(() => null),
     searchJobs({ pageSize: 6 }).catch(() => null),
@@ -71,6 +72,9 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     candidate
       ? getSavedJobIds([job.id], candidate.accessToken).catch(() => null)
       : ([] as number[]),
+    candidate
+      ? getCandidateProfile(candidate.user.id, candidate.accessToken).catch(() => null)
+      : null,
   ]);
   // Ưu tiên cùng lĩnh vực, thiếu thì bổ sung tin mới nhất để mục này không bị trống.
   const relatedJobs = [...(sameCategory?.items ?? []), ...(newest?.items ?? [])]
@@ -189,6 +193,21 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 alreadyApplied={alreadyApplied}
                 unavailableReason={unavailableReason}
               />
+              {candidate && profile && !alreadyApplied && !unavailableReason ? (
+                <p className="cv-note">
+                  <Icon name="paperclip" />
+                  {profile.cv ? (
+                    <span>
+                      Đơn sẽ đính kèm CV <strong>{profile.cv.fileName}</strong>.
+                    </span>
+                  ) : (
+                    <span>
+                      Bạn chưa có CV. <Link href="/ung-vien/ho-so">Tải CV lên</Link> để nhà tuyển dụng
+                      xem hồ sơ đầy đủ hơn.
+                    </span>
+                  )}
+                </p>
+              ) : null}
               {!session || candidate ? (
                 <SaveJobButton
                   key={`${job.id}-${savedIds?.includes(job.id)}`}

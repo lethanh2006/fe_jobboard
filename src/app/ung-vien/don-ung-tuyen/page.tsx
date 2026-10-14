@@ -103,6 +103,11 @@ export default async function CandidateApplicationsPage() {
                         <span>
                           <Icon name="clock" /> Ứng tuyển {formatDate(application.appliedAt)}
                         </span>
+                        {application.cvAttached ? (
+                          <span>
+                            <Icon name="paperclip" /> Đã đính kèm CV
+                          </span>
+                        ) : null}
                       </div>
                       <ApplicationProgress status={application.status} />
                     </div>

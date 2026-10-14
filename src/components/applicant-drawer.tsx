@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getApplicantDetail } from "@/lib/api";
-import { formatDate, formatSalary } from "@/lib/format";
+import { Icon } from "@/components/icon";
+import { applicantCvDownloadUrl, getApplicantDetail } from "@/lib/api";
+import { formatDate, formatFileSize, formatSalary } from "@/lib/format";
 import type { ApplicantDetail, JobApplication } from "@/types/job";
 
 const statusOptions: { value: JobApplication["status"]; label: string }[] = [
@@ -141,6 +142,25 @@ export function ApplicantDrawer({
               {detail.missingSkills.length > 0 ? (
                 <small className="drawer-legend">Nét đứt: kỹ năng tin yêu cầu mà ứng viên chưa có.</small>
               ) : null}
+            </section>
+
+            <section>
+              <h3>CV đính kèm</h3>
+              {detail.cv ? (
+                <a
+                  className="drawer-cv"
+                  href={applicantCvDownloadUrl(companyId, applicationId)}
+                  download
+                >
+                  <Icon name="paperclip" />
+                  <span>
+                    <strong>{detail.cv.fileName}</strong>
+                    <small>{formatFileSize(detail.cv.sizeBytes)} · bấm để tải về</small>
+                  </span>
+                </a>
+              ) : (
+                <p className="drawer-text">Ứng viên không đính kèm CV khi nộp đơn.</p>
+              )}
             </section>
 
             <section className="drawer-application">

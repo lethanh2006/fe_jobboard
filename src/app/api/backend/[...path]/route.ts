@@ -15,6 +15,19 @@ type RouteContext = {
   params: Promise<{ path: string[] }>;
 };
 
+/** Header cần giữ nguyên khi backend trả tệp (tên tệp tải về, không cho đoán kiểu, không cache). */
+function forwardedHeaders(response: Response): Record<string, string> {
+  const headers: Record<string, string> = {};
+  for (const name of ["content-disposition", "x-content-type-options", "cache-control"]) {
+    const value = response.headers.get(name);
+    if (value) {
+      headers[name] = value;
+    }
+  }
+
+  return headers;
+}
+
 async function proxy(request: Request, context: RouteContext) {
   if (!["GET", "HEAD"].includes(request.method) && !isTrustedMutation(request)) {
     return NextResponse.json(
@@ -68,6 +81,7 @@ async function proxy(request: Request, context: RouteContext) {
       status: backendResponse.status,
       headers: {
         "Content-Type": backendResponse.headers.get("content-type") ?? "application/json",
+        ...forwardedHeaders(backendResponse),
       },
     });
 

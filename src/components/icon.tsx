@@ -2,6 +2,7 @@ import type { SVGProps } from "react";
 
 type IconName =
   | "bookmark"
+  | "paperclip"
   | "bell"
   | "arrow"
   | "briefcase"
@@ -21,6 +22,7 @@ type IconProps = SVGProps<SVGSVGElement> & { name: IconName };
 
 const paths: Record<IconName, React.ReactNode> = {
   bookmark: <path d="M6 3h12v18l-6-4-6 4V3Z" />,
+  paperclip: <path d="m21 12-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8L13.5 3.9a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6L14.6 8" />,
   bell: <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />,
   arrow: <path d="m9 18 6-6-6-6" />,
   briefcase: (

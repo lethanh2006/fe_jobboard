@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CandidateCvCard } from "@/components/candidate-cv-card";
 import { CandidateProfileForm } from "@/components/candidate-profile-form";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -26,6 +27,7 @@ export default async function CandidateProfilePage() {
         </section>
         <div className="shell profile-content">
           <CandidateProfileForm profile={profile} />
+          <CandidateCvCard candidateId={profile.id} cv={profile.cv ?? null} />
         </div>
       </main>
       <SiteFooter />

@@ -13,6 +13,7 @@ import type {
   EmployerJobDetail,
   CategoryCount,
   CompanyProfile,
+  CvInfo,
   Job,
   JobApplication,
   JobFormInput,
@@ -70,6 +71,7 @@ type ApiApplication = {
   status: JobApplication["status"];
   appliedAt: string;
   matchScore?: number;
+  cvAttached?: boolean;
 };
 
 type ApiProblem = {
@@ -149,6 +151,7 @@ function mapApplication(application: ApiApplication): ApplicationView {
     status: application.status,
     appliedAt: toDateOnly(application.appliedAt),
     matchScore: application.matchScore,
+    cvAttached: application.cvAttached,
   };
 }
 
@@ -178,7 +181,8 @@ export async function request<T>(
     ...init,
     headers: {
       Accept: "application/json",
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      // Chỉ nội dung JSON (chuỗi) mới gắn Content-Type; FormData để trình duyệt tự đặt kèm boundary.
+      ...(typeof init?.body === "string" ? { "Content-Type": "application/json" } : {}),
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...init?.headers,
     },
@@ -547,3 +551,21 @@ export async function updateCompany(
     body: JSON.stringify(profile),
   });
 }
+
+/** Tải CV lên (thay CV hiện tại); lỗi hợp lệ/kích thước được backend trả bằng tiếng Việt. */
+export function uploadCv(candidateId: number, file: File) {
+  const body = new FormData();
+  body.append("file", file);
+
+  return request<CvInfo>(`/candidates/${candidateId}/cv`, { method: "POST", body });
+}
+
+export function deleteCv(candidateId: number) {
+  return request<void>(`/candidates/${candidateId}/cv`, { method: "DELETE" });
+}
+
+/** Địa chỉ tải CV qua proxy (kèm cookie phiên) để dùng trong thẻ <a>. */
+export const cvDownloadUrl = (candidateId: number) => `${browserApiUrl}/candidates/${candidateId}/cv`;
+
+export const applicantCvDownloadUrl = (companyId: number, applicationId: number) =>
+  `${browserApiUrl}/employers/${companyId}/applications/${applicationId}/cv`;

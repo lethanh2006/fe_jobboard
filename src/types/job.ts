@@ -46,6 +46,8 @@ export type ApplicationView = JobApplication & {
   location: string;
   /** Độ phù hợp 0–100; chỉ có ở danh sách phía nhà tuyển dụng. */
   matchScore?: number;
+  /** Đơn có đính kèm CV lúc nộp. */
+  cvAttached?: boolean;
 };
 
 export type EmployerJob = {
@@ -59,6 +61,14 @@ export type EmployerJob = {
   postedAt: string;
 };
 
+/** Thông tin một CV đã tải lên (không gồm nội dung; tải về qua endpoint riêng). */
+export type CvInfo = {
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  uploadedAt: string;
+};
+
 export type CandidateProfile = {
   id: number;
   name: string;
@@ -67,6 +77,8 @@ export type CandidateProfile = {
   desiredSalaryMin: number | null;
   desiredSalaryMax: number | null;
   skills: string[];
+  /** CV hiện tại; chỉ có khi ứng viên xem hồ sơ của chính mình. */
+  cv?: CvInfo | null;
 };
 
 /** Giá trị enum của API (khác nhãn tiếng Việt dùng để hiển thị trong `Job`). */
@@ -101,6 +113,8 @@ export type ApplicantDetail = {
   matchedSkills: string[];
   missingSkills: string[];
   salaryFit: boolean;
+  /** CV đính kèm đơn (bản tại thời điểm nộp). */
+  cv: CvInfo | null;
 };
 
 export type JobSortOption = "Newest" | "SalaryDescending";

@@ -55,6 +55,11 @@ npm run build
 - Không gian ứng viên được bảo vệ theo role: lịch sử/trạng thái ứng tuyển, mức
   hoàn thiện hồ sơ, gợi ý việc làm theo độ phù hợp, và cập nhật hồ sơ, kỹ năng
   (nhập tự do), khoảng lương mong muốn qua API.
+- CV ứng viên: trang `/ung-vien/ho-so` tải lên, thay hoặc xóa một CV (PDF, DOC, DOCX, tối đa
+  5 MB; kiểm tra phía trình duyệt rồi BE kiểm tra lại nội dung tệp). Trang chi tiết việc làm cho
+  biết đơn sẽ đính kèm CV nào hoặc nhắc tải CV; CV được chốt vào đơn lúc ứng tuyển nên đổi/xóa CV
+  sau đó không ảnh hưởng đơn cũ. Nhà tuyển dụng tải CV ngay trong ngăn hồ sơ ứng viên, chỉ với đơn
+  gửi tới công ty của mình.
 - Dashboard nhà tuyển dụng: soạn/sửa tin đầy đủ (lĩnh vực, cấp bậc, hình thức,
   lương, hạn nộp, mô tả/yêu cầu/quyền lợi, kỹ năng), đăng/đóng tin, lọc và sắp
   xếp ứng viên theo độ phù hợp, xem hồ sơ ứng viên trong ngăn bên và đổi trạng
