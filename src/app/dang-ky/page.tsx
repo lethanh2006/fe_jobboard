@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
 import { RegisterForm } from "@/components/register-form";
+import { homePathFor } from "@/lib/role-routes";
 import { getSession } from "@/lib/server-auth";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 export default async function RegisterPage() {
   const session = await getSession();
   if (session) {
-    redirect(session.user.role === "Employer" ? "/nha-tuyen-dung" : "/ung-vien/ho-so");
+    redirect(session.user.role === "Candidate" ? "/ung-vien/ho-so" : homePathFor(session.user.role));
   }
 
   return (

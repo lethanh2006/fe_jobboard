@@ -62,6 +62,9 @@ npm run build
   `/nha-tuyen-dung/cong-ty` sửa hồ sơ công ty (đổi tên sẽ làm mới phiên đăng nhập)
   và `/cong-ty/[id]` là trang công khai liệt kê các vị trí đang tuyển. Menu đầu trang
   hiển thị theo vai trò.
+- Trang `/quan-tri` (chỉ quản trị viên): tổng quan số liệu, danh sách tin/công ty/tài
+  khoản có lọc và phân trang, gỡ/khôi phục tin (bắt buộc nhập lý do), khóa/mở khóa
+  công ty và tài khoản, và nhật ký thao tác. Nhà tuyển dụng thấy lý do khi tin bị gỡ.
 - Trang `/dang-ky` tạo tài khoản ứng viên thật, kiểm tra xác nhận mật khẩu, tự
   đăng nhập và chuyển thẳng tới hồ sơ mới sau khi đăng ký thành công.
 - Trang `/tai-khoan/doi-mat-khau` xác minh mật khẩu hiện tại, áp dụng chính sách

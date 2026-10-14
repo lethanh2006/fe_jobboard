@@ -51,7 +51,9 @@ export type ApplicationView = JobApplication & {
 export type EmployerJob = {
   id: number;
   title: string;
-  status: "Draft" | "Published" | "Closed";
+  status: "Draft" | "Published" | "Closed" | "Removed";
+  /** Lý do quản trị viên gỡ tin; chỉ có khi status là Removed. */
+  removalReason: string | null;
   applications: number;
   deadline: string;
   postedAt: string;

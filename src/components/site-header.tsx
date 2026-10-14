@@ -19,7 +19,7 @@ function navigationFor(role?: UserRole): NavItem[] {
         { href: "/nha-tuyen-dung/cong-ty", label: "Hồ sơ công ty" },
       ];
     case "Admin":
-      return [jobs];
+      return [jobs, { href: "/quan-tri", label: "Quản trị" }];
     default:
       return [jobs, { href: "/dang-ky/nha-tuyen-dung", label: "Dành cho nhà tuyển dụng" }];
   }

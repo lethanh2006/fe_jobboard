@@ -165,7 +165,7 @@ function toDateOnly(value: string) {
   return value.slice(0, 10);
 }
 
-async function request<T>(
+export async function request<T>(
   path: string,
   init?: RequestInit,
   accessToken?: string,

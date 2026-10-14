@@ -4,6 +4,7 @@ import { type FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icon";
+import { homePathFor } from "@/lib/role-routes";
 import type { AuthUser } from "@/types/auth";
 
 export function LoginForm({
@@ -48,9 +49,7 @@ export function LoginForm({
         redirectTo?.startsWith("/") && !redirectTo.startsWith("//")
           ? redirectTo
           : undefined;
-      router.push(
-        safeRedirect ?? (body.user.role === "Employer" ? "/nha-tuyen-dung" : "/viec-lam"),
-      );
+      router.push(safeRedirect ?? homePathFor(body.user.role));
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không thể đăng nhập.");

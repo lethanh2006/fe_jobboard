@@ -27,6 +27,7 @@ const jobStatusLabels: Record<EmployerJob["status"], string> = {
   Draft: "Bản nháp",
   Published: "Đang tuyển",
   Closed: "Đã đóng",
+  Removed: "Bị gỡ",
 };
 
 const candidateStatusLabels: Record<JobApplication["status"], string> = {
@@ -231,6 +232,12 @@ export function EmployerDashboard({
                       <td>
                         <strong>{job.title}</strong>
                         <span>Mã tin #{String(job.id).padStart(3, "0")}</span>
+                        {job.status === "Removed" ? (
+                          <span className="removal-reason">
+                            Bị gỡ: {job.removalReason ?? "vi phạm điều khoản"}. Liên hệ quản trị viên
+                            để được xem xét lại.
+                          </span>
+                        ) : null}
                       </td>
                       <td>
                         <span className={`job-state job-state-${job.status.toLowerCase()}`}>
@@ -256,7 +263,7 @@ export function EmployerDashboard({
                       <td>{formatDate(job.deadline)}</td>
                       <td>
                         <div className="row-actions">
-                          {job.status !== "Closed" ? (
+                          {job.status === "Draft" || job.status === "Published" ? (
                             <button className="table-action table-action-neutral" type="button" onClick={() => openEditor(job.id)}>
                               Sửa
                             </button>

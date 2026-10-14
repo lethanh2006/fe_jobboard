@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { LoginForm } from "@/components/login-form";
+import { homePathFor } from "@/lib/role-routes";
 import { getSession } from "@/lib/server-auth";
 import { redirect as navigate } from "next/navigation";
 
@@ -16,7 +17,7 @@ type LoginPageProps = {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await getSession();
   if (session) {
-    navigate(session.user.role === "Employer" ? "/nha-tuyen-dung" : "/viec-lam");
+    navigate(homePathFor(session.user.role));
   }
 
   const { redirect, passwordChanged } = await searchParams;

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { accessTokenCookieName, refreshTokenCookieName } from "@/lib/auth-cookies";
 import { backendApiUrl } from "@/lib/api-config";
+import { homePathFor } from "@/lib/role-routes";
 import type { AuthUser, UserRole } from "@/types/auth";
 
 export type AuthSession = {
@@ -46,7 +47,7 @@ export async function requireRole(
   const session = await requireSession(returnPath);
 
   if (session.user.role !== role) {
-    redirect(session.user.role === "Employer" ? "/nha-tuyen-dung" : "/viec-lam");
+    redirect(homePathFor(session.user.role));
   }
 
   return session;
