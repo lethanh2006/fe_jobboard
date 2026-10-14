@@ -66,6 +66,10 @@ npm run build
   thái đơn.
 - Trang đăng nhập gọi API JWT thật, hỗ trợ redirect an toàn, refresh token xoay
   vòng, cookie `HttpOnly` và đăng xuất có thu hồi phiên phía server.
+- Giới hạn tần suất: các route đăng nhập/đăng ký/quên và đặt lại mật khẩu và proxy `/api/backend/*` chuyển tiếp
+  `X-Forwarded-For` của người dùng để BE đếm theo từng client thay vì theo máy chủ frontend (BE chỉ tin header này khi
+  `TRUST_PROXY` cho phép). Lỗi 429 của BE (quá nhiều lần thử, đăng nhập sai nhiều lần) hiển thị nguyên thông báo tiếng
+  Việt kèm thời gian chờ trong các biểu mẫu.
 - Trang `/dang-ky/nha-tuyen-dung` tạo công ty cùng tài khoản nhà tuyển dụng; trang
   `/nha-tuyen-dung/cong-ty` sửa hồ sơ công ty (đổi tên sẽ làm mới phiên đăng nhập)
   và `/cong-ty/[id]` là trang công khai liệt kê các vị trí đang tuyển. Menu đầu trang

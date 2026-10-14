@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { clearAuthCookies } from "@/lib/auth-cookies";
 import { backendApiUrl } from "@/lib/api-config";
+import { clientForwardingHeaders } from "@/lib/client-ip";
 import { isTrustedMutation } from "@/lib/request-security";
 
 type ResetPayload = {
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...clientForwardingHeaders(request),
       },
       body: JSON.stringify({ token: payload.token, newPassword: payload.newPassword }),
       cache: "no-store",

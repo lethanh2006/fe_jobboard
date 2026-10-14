@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { setAuthCookies } from "@/lib/auth-cookies";
 import { backendApiUrl } from "@/lib/api-config";
+import { clientForwardingHeaders } from "@/lib/client-ip";
 import { isTrustedMutation } from "@/lib/request-security";
 import type { LoginResponse } from "@/types/auth";
 
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...clientForwardingHeaders(request),
       },
       body: JSON.stringify({
         email: payload.email,

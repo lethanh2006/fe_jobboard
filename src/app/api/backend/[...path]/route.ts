@@ -7,6 +7,7 @@ import {
   setAuthCookies,
 } from "@/lib/auth-cookies";
 import { backendApiUrl } from "@/lib/api-config";
+import { clientForwardingHeaders } from "@/lib/client-ip";
 import { refreshSession } from "@/lib/refresh-session";
 import { isTrustedMutation } from "@/lib/request-security";
 import type { LoginResponse } from "@/types/auth";
@@ -48,7 +49,7 @@ async function proxy(request: Request, context: RouteContext) {
     : await request.arrayBuffer();
 
   function forward(token?: string) {
-    const headers = new Headers({ Accept: "application/json" });
+    const headers = new Headers({ Accept: "application/json", ...clientForwardingHeaders(request) });
     if (contentType) {
       headers.set("Content-Type", contentType);
     }
